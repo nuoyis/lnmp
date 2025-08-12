@@ -1,59 +1,56 @@
-name: Auto Tag & Release
+name: Auto Tag and Release
 
 on:
   push:
     branches:
-      - main  # 只有 main 分支才触发
+      - main
+
+env:
+  REPO: ${{ github.repository }}
 
 jobs:
-  release:
+  tag-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # 必须完整历史才能获取 tag
+          fetch-depth: 0  # 需要完整历史来获取所有 tag
 
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
-
-      - name: Bump version
-        id: bump
-        run: |
-          latest=${{ env.latest_tag }}
-          IFS='.' read -r major minor patch <<< "${latest#v}"
-          if [ "$latest" = "0.0.0" ]; then
-            new_tag="0.0.1"
-          else
-            patch=$((patch+1))
-            new_tag="v$major.$minor.$patch"
-          fi
-          echo "new_tag=$new_tag" >> $GITHUB_ENV
-
-      - name: Build project files
-        run: |
-          mkdir -p dist
-          echo "This is build for ${{ env.new_tag }}" > dist/readme.txt
-          # 这里可以替换成你的构建命令，比如 docker build、make 等
-
-      - name: Create tag
+      - name: Set up Git user
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag ${{ env.new_tag }}
-          git push origin ${{ env.new_tag }}
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "latest_tag=$latest_tag"
+          echo "##[set-output name=latest_tag::$latest_tag]"
+        shell: bash
+
+      - name: Compute new tag
+        id: new_tag
+        run: |
+          IFS='.' read -r major minor patch <<< "${{ steps.get_latest_tag.outputs.latest_tag }}"
+          patch=$((patch + 1))
+          new_tag="$major.$minor.$patch"
+          echo "new_tag=$new_tag"
+          echo "##[set-output name=new_tag::$new_tag]"
+        shell: bash
+
+      - name: Create new tag and push
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git tag ${{ steps.new_tag.outputs.new_tag }}
+          git push https://x-access-token:${PAT_TOKEN}@github.com/${REPO} ${{ steps.new_tag.outputs.new_tag }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.new_tag }}
-          name: "Release ${{ env.new_tag }}"
-          body: "自动构建版本 ${{ env.new_tag }}"
-          files: |
-            dist/*
+          tag_name: ${{ steps.new_tag.outputs.new_tag }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
