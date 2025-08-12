@@ -5,52 +5,63 @@ on:
     branches:
       - main
 
-env:
-  REPO: ${{ github.repository }}
+permissions:
+  contents: write    # 允许写入 tag & release
 
 jobs:
   tag-and-release:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repo (fetch all tags)
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 需要完整历史来获取所有 tag
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Git user
+      - name: Setup git user
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Get latest tag
-        id: get_latest_tag
+        id: get_latest
         run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          echo "latest_tag=$latest_tag"
-          echo "##[set-output name=latest_tag::$latest_tag]"
-        shell: bash
+          # 获取最近的 tag（没有则返回 0.0.0）
+          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "latest_tag=$latest" >> "$GITHUB_OUTPUT"
 
-      - name: Compute new tag
-        id: new_tag
+      - name: Compute new tag (patch++)
+        id: bump
         run: |
-          IFS='.' read -r major minor patch <<< "${{ steps.get_latest_tag.outputs.latest_tag }}"
+          latest="${{ steps.get_latest.outputs.latest_tag }}"
+          # 去掉可能前置的 v（如果你使用 v1.2.3 风格）
+          ver=${latest#v}
+          IFS='.' read -r maj min patch <<< "$ver"
+          # 若解析失败则默认 0.0.0
+          maj=${maj:-0}
+          min=${min:-0}
+          patch=${patch:-0}
           patch=$((patch + 1))
-          new_tag="$major.$minor.$patch"
-          echo "new_tag=$new_tag"
-          echo "##[set-output name=new_tag::$new_tag]"
-        shell: bash
+          new_tag="$maj.$min.$patch"
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
 
-      - name: Create new tag and push
+      - name: Create tag and push
         env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git tag ${{ steps.new_tag.outputs.new_tag }}
-          git push https://x-access-token:${PAT_TOKEN}@github.com/${REPO} ${{ steps.new_tag.outputs.new_tag }}
+          new_tag="${{ steps.bump.outputs.new_tag }}"
+          echo "Creating tag: $new_tag"
+          git tag -a "$new_tag" -m "Release $new_tag"
+          # 推到 origin（checkout 已用 GITHUB_TOKEN 设置凭据）
+          git push origin "refs/tags/$new_tag"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: actions/create-release@v1
         with:
-          tag_name: ${{ steps.new_tag.outputs.new_tag }}
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          release_name: Release ${{ steps.bump.outputs.new_tag }}
+          body: "自动发布 ${{ steps.bump.outputs.new_tag }}"
+          draft: false
+          prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
