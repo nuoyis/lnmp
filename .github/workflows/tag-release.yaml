@@ -1,4 +1,4 @@
-name: Auto Tag and Release
+name: Auto Tag, Branch and Release
 
 on:
   push:
@@ -6,17 +6,18 @@ on:
       - main
 
 permissions:
-  contents: write    # 允许写入 tag & release
+  contents: write
 
 jobs:
-  tag-and-release:
+  tag-branch-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo (fetch all tags)
+      - name: Checkout repo (fetch all tags & branches)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Setup git user
         run: |
@@ -26,7 +27,6 @@ jobs:
       - name: Get latest tag
         id: get_latest
         run: |
-          # 获取最近的 tag（没有则返回 0.0.0）
           latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
           echo "latest_tag=$latest" >> "$GITHUB_OUTPUT"
 
@@ -34,10 +34,8 @@ jobs:
         id: bump
         run: |
           latest="${{ steps.get_latest.outputs.latest_tag }}"
-          # 去掉可能前置的 v（如果你使用 v1.2.3 风格）
           ver=${latest#v}
           IFS='.' read -r maj min patch <<< "$ver"
-          # 若解析失败则默认 0.0.0
           maj=${maj:-0}
           min=${min:-0}
           patch=${patch:-0}
@@ -46,14 +44,31 @@ jobs:
           echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
 
       - name: Create tag and push
+        id: push_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           new_tag="${{ steps.bump.outputs.new_tag }}"
           echo "Creating tag: $new_tag"
           git tag -a "$new_tag" -m "Release $new_tag"
-          # 推到 origin（checkout 已用 GITHUB_TOKEN 设置凭据）
           git push origin "refs/tags/$new_tag"
+
+      - name: Create branch with same name (if not exists)
+        id: create_branch
+        run: |
+          new_tag="${{ steps.bump.outputs.new_tag }}"
+          # 检查远端是否已存在该分支
+          if git ls-remote --heads origin "refs/heads/$new_tag" | grep -q "$new_tag"; then
+            echo "Branch $new_tag already exists on origin, skipping creation."
+            echo "branch_created=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Creating branch $new_tag from origin/main"
+            # 确保 main 已经抓取
+            git fetch origin main:refs/remotes/origin/main
+            git checkout -b "$new_tag" "origin/main"
+            git push origin "refs/heads/$new_tag"
+            echo "branch_created=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
