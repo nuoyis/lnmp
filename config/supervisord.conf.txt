@@ -1,0 +1,51 @@
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisord.log
+pidfile=/run/supervisord.pid
+childlogdir=/var/log/supervisor
+
+[unix_http_server]
+file=/run/supervisor.sock
+chmod=0700
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix://run/supervisor.sock
+
+[program:nginx]
+user=nuoyis-web
+command=/usr/bin/nginx -g 'daemon off;'
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stdout_logfile=/dev/stdout
+
+[program:phplatest]
+user=nuoyis-web
+command=/usr/bin/php-latest --nodaemonize
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stdout_logfile=/dev/stdout
+
+[program:phpstable]
+user=nuoyis-web
+command=/usr/bin/php-stable --nodaemonize
+autostart=true
+autorestart=true
+stderr_logfile=/dev/stderr
+stdout_logfile=/dev/stdout
+
+[program:mariadb]
+user=nuoyis-web
+command=/nuoyis-web/mariadb/bin/mariadbd --defaults-file=/nuoyis-web/mariadb/config/my.cnf --user=nuoyis-web
+autostart=true
+autorestart=true
+stdout_logfile=/nuoyis-web/logs/mariadb-stdout.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=3
+stderr_logfile=/nuoyis-web/logs/mariadb-stderr.log
+stderr_logfile_maxbytes=10MB
+stderr_logfile_backups=3

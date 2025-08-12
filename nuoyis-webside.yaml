@@ -1,0 +1,61 @@
+version: '3'
+services:
+  nuoyis-lnmp-np:
+    container_name: nuoyis-lnmp-np
+    image: registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp-np:latest
+    networks: 
+      nuoyis-net:
+        aliases:
+          - nuoyis-lnmp-np
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /nuoyis-server/web/nginx/conf:/nuoyis-web/nginx/conf
+      - /nuoyis-server/web/nginx/webside:/nuoyis-web/nginx/webside
+      - /nuoyis-server/web/nginx/ssl:/nuoyis-web/nginx/ssl
+      - /var/log:/nuoyis-web/logs
+    shm_size: '1g'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    user: "${SUID}:${SGID}"
+    restart: always
+  nuoyis-lnmp-mariadb:
+    container_name: nuoyis-lnmp-mariadb
+    image: docker.m.daocloud.io/mariadb:latest
+    networks: 
+      nuoyis-net:
+        aliases:
+          - nuoyis-lnmp-mariadb
+    environment:
+      TIME_ZONE: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: "epLpvLcSj9c0U2Vi"
+    volumes:
+      - /nuoyis-server/web/mariadb/init:/docker-entrypoint-initdb.d
+      - /nuoyis-server/web/mariadb/data:/nuoyis-web/mariadb/data
+      - /nuoyis-server/web/mariadb/import:/nuoyis-web/mariadb/import
+      - /nuoyis-server/web/mariadb/config/my.cnf:/nuoyis-web/mariadb/config/my.cnf
+    ports:
+      - 3306:3306
+    shm_size: '1g'
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mariadb -u root -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1 FROM information_schema.tables LIMIT 1;'"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    restart: always
+  
+networks:
+  nuoyis-net:
+    name: nuoyis-net
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.223.0/24
+          gateway: 192.168.223.1

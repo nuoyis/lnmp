@@ -1,0 +1,61 @@
+version: '3'
+services:
+  nuoyis-lnmp-np:
+    container_name: nuoyis-lnmp-np
+    image: swr.cn-north-4.myhuaweicloud.com/nuoyis/nuoyis-lnp:v1.32
+    networks:
+      nuoyis-net:
+        aliases:
+          - nuoyis-lnp
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /nuoyis-web/nginx/conf:/nuoyis-web/nginx/conf
+      - /nuoyis-web/nginx/webside:/nuoyis-web/nginx/webside
+      - /nuoyis-web/nginx/ssl:/nuoyis-web/nginx/ssl
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      retries: 3
+      timeout: 10s
+    restart: always
+  nuoyis-lnmp-mariadb:
+    container_name: nuoyis-lnmp-mariadb
+    image: mariadb:latest
+    networks:
+      nuoyis-net:
+        aliases:
+          - nuoyis-mariadb
+    environment:
+      TIME_ZONE: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: ""
+    volumes:
+      - /nuoyis-web/mariadb/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - /nuoyis-web/mariadb/server:/var/lib/mysql
+      - /nuoyis-web/mariadb/import:/nuoyis-web/mariadb/import
+      - /nuoyis-web/mariadb/config/my.cnf:/etc/mysql/my.cnf
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mariadb -u root -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1 FROM information_schema.tables LIMIT 1;'"]
+      interval: 30s
+      retries: 3
+      timeout: 10s
+    restart: always
+  nuoyis-lnmp-autoheal:
+    container_name: nuoyis-lnmp-autoheal
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+networks:
+  nuoyis-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.223.0/24
+          gateway: 192.168.223.1
