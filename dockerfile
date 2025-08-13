@@ -1,18 +1,45 @@
-# Github 编译版本
-FROM docker.io/debian:12 as builder
+FROM docker.io/debian:12 AS versions
+
+SHELL ["/bin/bash", "-c"]
+
+RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y && \
+    apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false upgrade -y && \
+    apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends curl jq ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Fetch versions from upstream (with sane fallbacks) and write JSON
+RUN NGINX_VERSION=$(curl -s "https://api.github.com/repos/nginx/nginx/releases/latest" | jq -r '.name' | grep -oP '\d+\.\d+\.\d+' | head -n 1); \
+    PHP_LATEST_VERSION=$(curl -s "https://api.github.com/repos/php/php-src/releases" | jq -r '.[0].name' | grep -oP '\d+\.\d+\.\d+' | head -n 1); \
+    PHP_STABLE_VERSION=$(curl -s "https://api.github.com/repos/php/php-src/releases" | jq -r '.[].name' | grep -oP '8\.1\.\d+' | head -n 1); \
+    NGINX_VERSION=${NGINX_VERSION:-"1.27.3"}; \
+    PHP_LATEST_VERSION=${PHP_LATEST_VERSION:-"8.4.2"}; \
+    PHP_STABLE_VERSION=7.4.33; \
+    PHP_REDIS_VERSION=6.1.0; \
+    echo "ENV NGINX_VERSION=$NGINX_VERSION" >> /tmp/version.env; \
+    echo "ENV PHP_LATEST_VERSION=$PHP_LATEST_VERSION" >> /tmp/version.env; \
+    echo "ENV PHP_STABLE_VERSION=$PHP_STABLE_VERSION" >> /tmp/version.env; \
+    echo "ENV PHP_REDIS_VERSION=$PHP_REDIS_VERSION" >> /tmp/version.env; \
+    echo "ENV MARIADB_LATEST_VERSION=12.0.0" >> /tmp/version.env; \
+    echo nginx: $NGINX_VERSION; \
+    echo php_latest: $PHP_LATEST_VERSION; \
+    echo php_stable: 7.4.33; \
+    echo php_redis_version: 6.1.0; \
+    echo "nuoyis lnmp will be build"; \
+    sleep 5
+    
+FROM docker.io/debian:12 AS builder
 
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
 
 # 定义区域
-ARG NGINX_VERSION
-ARG PHP_LATEST_VERSION
-ARG PHP_STABLE_VERSION
-ARG PHP_REDIS_VERSION
-ARG MARIADB_LATEST_VERSION
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
+
+# lnmp 最新版本信息
+COPY --from=versions /tmp/version.env /tmp/version.env
 
 # 更换软件源，并安装基础依赖
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
@@ -36,7 +63,6 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
         inetutils-ping \
         pkg-config \
         build-essential \
-        libpcre3 \
         libpcre3-dev \
         libncurses5-dev \
         gnutls-dev \
@@ -60,7 +86,8 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 目录初始化
-RUN mkdir -p /nuoyis-build/php-$PHP_LATEST_VERSION/ext/php-redis \
+RUN export $(cat /tmp/version.env); \
+    mkdir -p /nuoyis-build/php-$PHP_LATEST_VERSION/ext/php-redis \
     /nuoyis-build/php-$PHP_STABLE_VERSION/ext/php-redis \
     /nuoyis-web/{logs/nginx,nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
     /var/run/php/{stable,latest} \
@@ -68,7 +95,8 @@ RUN mkdir -p /nuoyis-build/php-$PHP_LATEST_VERSION/ext/php-redis \
 
 # 下载源码
 WORKDIR /nuoyis-build
-RUN wget https://mirrors.huaweicloud.com/nginx/nginx-$NGINX_VERSION.tar.gz && \
+RUN export $(cat /tmp/version.env); \
+    wget https://mirrors.huaweicloud.com/nginx/nginx-$NGINX_VERSION.tar.gz && \
     wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz && \
     wget https://openlist.nuoyis.net/d/blog/linux%E8%BD%AF%E4%BB%B6%E5%8C%85%E5%8A%A0%E9%80%9F/php/php-$PHP_STABLE_VERSION.tar.gz && \
     wget https://github.com/phpredis/phpredis/archive/refs/tags/$PHP_REDIS_VERSION.tar.gz && \
@@ -84,8 +112,10 @@ RUN wget https://mirrors.huaweicloud.com/nginx/nginx-$NGINX_VERSION.tar.gz && \
     tar -xzf curl-7.87.0.tar.gz
 
 # Nginx编译
-WORKDIR /nuoyis-build/nginx-$NGINX_VERSION
-RUN sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      \"$NGINX_VERSION\"/g' ./src/core/nginx.h && \
+WORKDIR /nuoyis-build
+RUN export $(cat /tmp/version.env); \
+    cd nginx-$NGINX_VERSION; \
+    sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      \"$NGINX_VERSION\"/g' ./src/core/nginx.h && \
     sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h && \
     sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filter_module.c && \
     sed -i 's/"Server: " NGINX_VER CRLF/"Server: nuoyis server" CRLF/g' ./src/http/ngx_http_header_filter_module.c && \
@@ -122,11 +152,11 @@ RUN sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      \"$NGINX_
 
 # 复制 php Redis 源码
 WORKDIR /nuoyis-build
-RUN cp -r phpredis-$PHP_REDIS_VERSION/* php-$PHP_LATEST_VERSION/ext/php-redis && \
+RUN export $(cat /tmp/version.env); \
+    cp -r phpredis-$PHP_REDIS_VERSION/* php-$PHP_LATEST_VERSION/ext/php-redis && \
     cp -r phpredis-$PHP_REDIS_VERSION/* php-$PHP_STABLE_VERSION/ext/php-redis
 
 # 根据架构选择交叉编译器和参数
-
 RUN case "$TARGETARCH$TARGETVARIANT" in \
       amd64)  export CC=gcc CXX=g++ CFLAGS="-O2" CXXFLAGS="-O2" ;; \
       arm64)  export CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ CFLAGS="-O2" CXXFLAGS="-O2" ;; \
@@ -136,7 +166,7 @@ RUN case "$TARGETARCH$TARGETVARIANT" in \
     esac && \
     echo "CC=$CC" && echo "CFLAGS=$CFLAGS"
 
-# # php stable 版本 openssl 编译
+# php stable 版本 openssl 编译
 WORKDIR /nuoyis-build/openssl-1.1.1w
 RUN CONFIGURE_OPTS="--prefix=/nuoyis-web/openssl-1.1.1 --openssldir=/nuoyis-web/openssl-1.1.1 no-shared no-dso no-tests"; \
     if [ "$TARGETARCH" = "arm" ] && [ "$TARGETVARIANT" = "v7" ]; then \
@@ -154,69 +184,74 @@ WORKDIR /nuoyis-build/curl-7.87.0
 RUN ./configure --prefix=/nuoyis-web/curl-openssl --with-ssl=/nuoyis-web/openssl-1.1.1 --disable-shared --enable-static && make -j$(nproc) && make install
 
 # php 编译
-RUN for phpversion in $PHP_STABLE_VERSION $PHP_LATEST_VERSION; do \
-    if [ "$phpversion" == "$PHP_STABLE_VERSION" ]; then \
-        export CURL_PREFIX="/nuoyis-web/curl-openssl"; \
-        export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-1.1.1"; \
-        export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include"; \
-        export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib"; \
-        export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"; \
-        export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"; \
-        CONFIG_CURL="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}"; \
-    else \
-        unset CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH; \
-        CONFIG_CURL="--with-curl --with-openssl"; \
-    fi; \
-      cd /nuoyis-build/php-$phpversion; \
-      ./configure --prefix=/nuoyis-web/php/$phpversion/ \
-                  --with-config-file-path=/nuoyis-web/php/$phpversion/etc/ \
-                  --with-freetype \
-                  --enable-gd \
-                  --with-jpeg \
-                  --with-gettext \
-                  --with-libdir=lib64 \
-                  --with-libxml \
-                  --with-mysqli \
-                  $OPENSSL_PREFIX \
-                  --with-pdo-mysql \
-                  --with-pdo-sqlite \
-                  --with-pear \
-                  --enable-sockets \
-                  --with-mhash \
-                  --with-ldap-sasl \
-                  --with-xsl \
-                  --with-zlib \
-                  --with-zip \
-                  --with-bz2 \
-                  --with-iconv \
-                  --enable-fpm \
-                  --enable-pdo \
-                  --enable-bcmath \
-                  --enable-mbregex \
-                  --enable-mbstring \
-                  --enable-opcache \
-                  --enable-pcntl \
-                  --enable-shmop \
-                  --enable-soap \
-                  --enable-ftp \
-                  --with-xpm \
-                  --enable-xml \
-                  --enable-sysvsem \
-                  --enable-cli \
-                  --enable-intl \
-                  --enable-calendar \
-                  --enable-static \
-                  --enable-ctype \
-                  --enable-mysqlnd \
-                  --enable-session \
-                  --enable-redis; \
-      make -j$(nproc); \
-      make install; \
+RUN export $(cat /tmp/version.env); \
+    for phpversion in $PHP_STABLE_VERSION $PHP_LATEST_VERSION; do \
+        if [ "$phpversion" == "$PHP_STABLE_VERSION" ]; then \
+            export buildtype=stable; \
+            export CURL_PREFIX="/nuoyis-web/curl-openssl"; \
+            export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-1.1.1"; \
+            export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include"; \
+            export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib"; \
+            export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"; \
+            export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"; \
+            CONFIG_CURL="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}"; \
+        else \
+            export buildtype=latest; \
+            unset CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH; \
+            CONFIG_CURL="--with-curl --with-openssl"; \
+        fi; \
+        cd /nuoyis-build/php-$phpversion; \
+        ./configure --prefix=/nuoyis-web/php/$buildtype/ \
+            --with-config-file-path=/nuoyis-web/php/$buildtype/etc/ \
+            --with-freetype \
+            --enable-gd \
+            --with-jpeg \
+            --with-gettext \
+            --with-libdir=lib64 \
+            --with-libxml \
+            --with-mysqli \
+            $OPENSSL_PREFIX \
+            --with-pdo-mysql \
+            --with-pdo-sqlite \
+            --with-pear \
+            --enable-sockets \
+            --with-mhash \
+            --with-ldap-sasl \
+            --with-xsl \
+            --with-zlib \
+            --with-zip \
+            --with-bz2 \
+            --with-iconv \
+            --enable-fpm \
+            --enable-pdo \
+            --enable-bcmath \
+            --enable-mbregex \
+            --enable-mbstring \
+            --enable-opcache \
+            --enable-pcntl \
+            --enable-shmop \
+            --enable-soap \
+            --enable-ftp \
+            --with-xpm \
+            --enable-xml \
+            --enable-sysvsem \
+            --enable-cli \
+            --enable-intl \
+            --enable-calendar \
+            --enable-static \
+            --enable-ctype \
+            --enable-mysqlnd \
+            --enable-session \
+            --enable-redis; \
+        make -j$(nproc); \
+        make install; \
     done
 
 # mariadb 编译
-WORKDIR /nuoyis-build/mariadb-$MARIADB_LATEST_VERSION
-RUN cmake . \
+WORKDIR /nuoyis-build
+RUN export $(cat /tmp/version.env); \
+    cd mariadb-$MARIADB_LATEST_VERSION && \
+    cmake . \
         -DCMAKE_INSTALL_PREFIX=/nuoyis-web/mariadb \
         -DMYSQL_DATADIR=/nuoyis-web/mariadb/data \
         -DSYSCONFDIR=/nuoyis-web/mariadb/config \
@@ -235,13 +270,15 @@ RUN cmake . \
     make -j$(nproc) && make install
 
 # 新增步骤：收集关键二进制的共享库依赖（仅复制必要的 .so 文件）
-RUN mkdir -p /runner-libs && \
-    for bin in /nuoyis-web/php/$PHP_LATEST_VERSION/sbin/php-fpm /nuoyis-web/php/$PHP_STABLE_VERSION/sbin/php-fpm /nuoyis-web/mariadb/bin/mysqld; do \
+RUN export $(cat /tmp/version.env); \
+    mkdir -p /runner-libs && \
+    for bin in /nuoyis-web/php/latest/sbin/php-fpm /nuoyis-web/php/stable/sbin/php-fpm /nuoyis-web/mariadb/bin/mysqld; do \
         ldd $bin | grep "=> /" | awk '{print $3}' | sort -u | xargs -r -I{} cp --parents {} /runner-libs; \
     done
 
 # 删除非必要软件包以及处理php启动文件
-RUN apt-get autoremove --purge -y \
+RUN export $(cat /tmp/version.env); \
+    apt-get autoremove --purge -y \
     ca-certificates \
     vim \
     jq \
@@ -282,8 +319,8 @@ RUN apt-get autoremove --purge -y \
     libgeoip-dev && \
     apt-get clean && \
     rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info /nuoyis-build /nuoyis-web/curl-openssl /nuoyis-web/openssl-1.1.1 && \
-    mv /nuoyis-web/php/$PHP_LATEST_VERSION/etc/php-fpm.conf.default /nuoyis-web/php/$PHP_LATEST_VERSION/etc/php-fpm.conf &&\
-    mv /nuoyis-web/php/$PHP_STABLE_VERSION/etc/php-fpm.conf.default /nuoyis-web/php/$PHP_STABLE_VERSION/etc/php-fpm.conf
+    mv /nuoyis-web/php/latest/etc/php-fpm.conf.default /nuoyis-web/php/latest/etc/php-fpm.conf &&\
+    mv /nuoyis-web/php/stable/etc/php-fpm.conf.default /nuoyis-web/php/stable/etc/php-fpm.conf
 
 # 配置文件添加
 ADD config/nginx.conf.txt /nuoyis-web/nginx/server/conf/nginx.conf
@@ -293,13 +330,13 @@ ADD config/ssl/default.key /nuoyis-web/nginx/server/conf/ssl/default.key
 ADD config/start-php-latest.conf.txt /nuoyis-web/nginx/server/conf/start-php-latest.conf
 ADD config/path.conf.txt /nuoyis-web/nginx/server/conf/path.conf
 ADD config/start-php-stable.conf.txt /nuoyis-web/nginx/server/conf/start-php-stable.conf
-ADD config/latest-php.ini.txt /nuoyis-web/php/$PHP_LATEST_VERSION/etc/php.ini
-ADD config/fpm-latest.conf.txt /nuoyis-web/php/$PHP_LATEST_VERSION/etc/php-fpm.d/fpm.conf
-ADD config/stable-php.ini.txt /nuoyis-web/php/$PHP_STABLE_VERSION/etc/php.ini
-ADD config/fpm-stable.conf.txt /nuoyis-web/php/$PHP_STABLE_VERSION/etc/php-fpm.d/fpm.conf
+ADD config/latest-php.ini.txt /nuoyis-web/php/latest/etc/php.ini
+ADD config/fpm-latest.conf.txt /nuoyis-web/php/latest/etc/php-fpm.d/fpm.conf
+ADD config/stable-php.ini.txt /nuoyis-web/php/stable/etc/php.ini
+ADD config/fpm-stable.conf.txt /nuoyis-web/php/stable/etc/php-fpm.d/fpm.conf
 
 # 创建最终镜像
-FROM docker.io/debian:bookworm-slim as runner
+FROM docker.io/debian:bookworm-slim AS runner
 
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
@@ -307,13 +344,6 @@ SHELL ["/bin/bash", "-c"]
 # 设置时区
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# 定义版本变量
-ARG NGINX_VERSION
-ARG PHP_LATEST_VERSION
-ARG PHP_STABLE_VERSION
-ARG PHP_REDIS_VERSION
-ARG MARIADB_LATEST_VERSION
 
 # 复制 必要的 so依赖
 COPY --from=builder /runner-libs /runner-libs
@@ -345,8 +375,8 @@ RUN if [ -d /runner-libs ]; then \
     apt-get -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y --no-install-recommends supervisor curl ca-certificates libncurses6 libtinfo6 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     ln -s /nuoyis-web/nginx/server/sbin/nginx /usr/bin/nginx && \
-    ln -s /nuoyis-web/php/$PHP_LATEST_VERSION/sbin/php-fpm /usr/bin/php-latest && \
-    ln -s /nuoyis-web/php/$PHP_STABLE_VERSION/sbin/php-fpm /usr/bin/php-stable
+    ln -s /nuoyis-web/php/latest/sbin/php-fpm /usr/bin/php-latest && \
+    ln -s /nuoyis-web/php/stable/sbin/php-fpm /usr/bin/php-stable
 
 ADD config/supervisord.conf.txt /etc/supervisord.conf
 ADD start.sh /

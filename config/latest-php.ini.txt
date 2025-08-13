@@ -1964,5 +1964,5 @@ ldap.max_links = -1
 ; List of headers files to preload, wildcard patterns allowed.
 ;ffi.preload=
 
-include_path = ".:/php/includes:/nuoyis-web/php/8.4.11/lib/php"
+include_path = ".:/php/includes:/nuoyis-web/php/latest/lib/php"
 expose_php = Off
