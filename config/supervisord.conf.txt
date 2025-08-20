@@ -1,4 +1,5 @@
 [supervisord]
+loglevel=warn
 nodaemon=true
 logfile=/var/log/supervisord.log
 pidfile=/run/supervisord.pid
@@ -16,31 +17,37 @@ serverurl=unix://run/supervisor.sock
 
 [program:nginx]
 user=nuoyis-web
-command=/usr/bin/nginx -g 'daemon off;'
+command=nginx -g 'daemon off;'
 autostart=true
 autorestart=true
-stderr_logfile=/dev/stderr
 stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 
 [program:phplatest]
 user=nuoyis-web
-command=/usr/bin/php-latest --nodaemonize
+command=php-latest --nodaemonize
 autostart=true
 autorestart=true
-stderr_logfile=/dev/stderr
 stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 
 [program:phpstable]
 user=nuoyis-web
-command=/usr/bin/php-stable --nodaemonize
+command=php-stable --nodaemonize
 autostart=true
 autorestart=true
-stderr_logfile=/dev/stderr
 stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 
 [program:mariadb]
 user=nuoyis-web
-command=/nuoyis-web/mariadb/bin/mariadbd --defaults-file=/nuoyis-web/mariadb/config/my.cnf --user=nuoyis-web
+command=mariadbd-safe --defaults-file=/nuoyis-web/mariadb/config/my.cnf --datadir=/nuoyis-web/mariadb/data --user=nuoyis-web
 autostart=true
 autorestart=true
 stdout_logfile=/nuoyis-web/logs/mariadb-stdout.log

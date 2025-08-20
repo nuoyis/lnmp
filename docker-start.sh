@@ -11,4 +11,4 @@ chmod -R u+rwX,g+rwX,o-rwx /nuoyis-server/web
 chmod g+x /nuoyis-server
 chmod g+x /nuoyis-server/web
 
-docker-compose -f nuoyis-lnmp.yaml up -d
+docker-compose  up -d

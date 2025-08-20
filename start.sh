@@ -6,23 +6,21 @@ echo "Welcome use nuoyis's lnmp service"
 
 # nginx/php 类启动检查
 # 默认HTML
-DEFAULTFILE=/nuoyis-web/nginx/webside/default/index.html
-
-if [ ! -f "$DEFAULTFILE" ]; then
-echo "default page is not found. then create new default page of html"
-mkdir -p /nuoyis-web/nginx/webside/default/
-touch $DEFAULTFILE
-cat > $DEFAULTFILE << EOF
-welcome to nuoyis's server
-EOF
+echo "check nginx service"
+if [ ! -f "/nuoyis-web/nginx/conf/default.conf" ]; then
+  echo "default page is not found. then create new default page of html"
+  mkdir -p /nuoyis-web/nginx/webside/default/
+  cp /nuoyis-web/nginx/server/template/index.html /nuoyis-web/nginx/webside/default/index.html
+  cp /nuoyis-web/nginx/server/template/default.conf /nuoyis-web/nginx/conf/default.conf
 else
-echo "default page is found. then use default page of html"
+  echo "default page is found. then use default page of html"
 fi
-
+cp /nuoyis-web/nginx/server/template/nginx.conf.template /nuoyis-web/nginx/conf/nginx.conf.template
 mkdir -p /nuoyis-web/logs/nginx/
 touch /nuoyis-web/logs/nginx/error.log
-
+echo "nginx service checkd"
 # mariadb 类启动检查
+echo "check database service"
 chown -R nuoyis-web:nuoyis-web /nuoyis-web
 chown -R nuoyis-web:nuoyis-web /run
 chmod -R 775 /run
@@ -59,7 +57,7 @@ mkdir -p "$LOCK_DIR"
 if [ ! -f "$INIT_LOCK" ]; then
   echo "init database..."
   /nuoyis-web/mariadb/scripts/mariadb-install-db --datadir=/nuoyis-web/mariadb/data --user=nuoyis-web
-  /nuoyis-web/mariadb/bin/mariadbd --defaults-file=$DEFAULTCNF --user=nuoyis-web &
+  mariadbd-safe --datadir=/nuoyis-web/mariadb/data --user=nuoyis-web &
   mariadb_pid=$!
   until mariadb -u root -e "SELECT 1;" &>/dev/null; do
         echo "Waiting for MariaDB to be ready..."
@@ -89,7 +87,7 @@ if [ -n "$mariadb_pid" ]; then
     kill -9 "$mariadb_pid"
 fi
 
-echo "database checkd"
+echo "database service checkd"
 
 echo "nuoyis service is starting"
 exec "$@"
