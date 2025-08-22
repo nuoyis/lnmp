@@ -30,7 +30,7 @@ services:
       - /nuoyis-server/web/mariadb/config:/nuoyis-web/mariadb/config
     environment:
       TIME_ZONE: Asia/Shanghai
-      MYSQL_ROOT_PASSWORD: "epLpvLcSj9c0U2Vi"
+      MYSQL_ROOT_PASSWORD: "testTest"
     shm_size: '1g'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]

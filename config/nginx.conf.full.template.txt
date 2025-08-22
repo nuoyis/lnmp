@@ -1,0 +1,60 @@
+# 默认模板页面
+server {
+    listen 80;
+    
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    
+    listen 443 quic;
+    listen [::]:443 quic;
+    
+    http2 on;
+    
+    # 老版写法
+    # listen 443 ssl;
+    server_name template;
+    # SSL 配置
+    ssl_certificate /nuoyis-web/nginx/ssl/template.pem;
+    ssl_certificate_key /nuoyis-web/nginx/ssl/template.key;
+    add_header Alt-Svc 'quic=":443"; h3-27=":443";h3-25=":443"; h3-T050=":443"; h3-Q050=":443";h3-Q049=":443";h3-Q048=":443"; h3-Q046=":443"; h3-Q043=":443";ma=86400';
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    charset utf-8;
+    root /nuoyis-web/nginx/webside/default;
+    index index.html;
+    
+    # http跳转https
+    if ($scheme = http) {
+    return 301 https://$host$request_uri;
+    }
+    
+    # 错误页面配置
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    
+    # php引入方式
+    # 最新模式（php8+）
+    include start-php-latest.conf;
+    # 兼容模式（php7.4）
+    include start-php-stable.conf;
+    # 伪静态
+    location / {
+    try_files $uri $uri/ /index.php?$args;
+    }
+    
+    # 禁止访问目录等
+    location ~ /\. {
+    deny all;
+    return 404;
+    }
+    
+    # 日志系统
+    access_log  /nuoyis-web/logs/nginx/template.log;
+    error_log  /nuoyis-web/logs/nginx/template.log;
+}

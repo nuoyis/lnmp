@@ -1,8 +1,7 @@
-version: '3'
 services:
   nuoyis-lnmp:
     container_name: nuoyis-lnmp
-    image: nuoyis1024/nuoyis-lnmp:0.0.2
+    image: nuoyis1024/nuoyis-lnmp:latest
     networks: 
       nuoyis-net:
         aliases:
@@ -10,6 +9,7 @@ services:
     ports:
       - 80:80
       - 443:443
+      - 443:443/udp
       - 3306:3306
     volumes:
       # nginx 配置文件
@@ -30,8 +30,7 @@ services:
       - /nuoyis-server/web/mariadb/config:/nuoyis-web/mariadb/config
     environment:
       TIME_ZONE: Asia/Shanghai
-      MYSQL_ROOT_PASSWORD: "epLpvLcSj9c0U2Vi"
-    shm_size: '1g'
+      MYSQL_ROOT_PASSWORD: ""
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -42,8 +41,8 @@ services:
     restart: always
 
 networks:
-  nuoyis-net:
-    name: nuoyis-net
+  nuoyis-lnmp-net:
+    name: nuoyis-lnmp-net
     driver: bridge
     ipam:
       driver: default

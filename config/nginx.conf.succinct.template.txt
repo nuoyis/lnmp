@@ -1,0 +1,36 @@
+# 默认模板页面
+server {
+    # 引入头部文件
+    include head.conf
+    server_name template;
+    # SSL 配置
+    ssl_certificate /nuoyis-web/nginx/ssl/template.pem;
+    ssl_certificate_key /nuoyis-web/nginx/ssl/template.key;
+    # 文件目录以及index文件配置
+    root /nuoyis-web/nginx/webside/default;
+    index index.html;
+    # http跳转https
+    if ($scheme = http) {
+       return 301 https://$host$request_uri;
+    }       
+    # 错误页面配置
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    # php引入方式
+    # 最新模式（php8+）
+    include start-php-latest.conf
+    # 兼容模式（php7.4）
+    include start-php-stable.conf;        
+    # 伪静态
+    location / {
+       try_files $uri $uri/ /index.php?$args;
+    }       
+    # 禁止访问目录等
+    location ~ /\. {
+       deny all;
+       return 404;
+    }       
+    # 日志系统
+    access_log  /nuoyis-web/logs/nginx/template.log;
+    error_log  /nuoyis-web/logs/nginx/template.log;
+}

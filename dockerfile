@@ -43,6 +43,7 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false upgrade -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
     apt install -y \
+        dos2unix \
         vim \
         jq \
         wget \
@@ -289,6 +290,7 @@ ADD config/ssl/default.key /nuoyis-web/nginx/server/conf/ssl/default.key
 ADD config/start-php-latest.conf.txt /nuoyis-web/nginx/server/conf/start-php-latest.conf
 ADD config/path.conf.txt /nuoyis-web/nginx/server/conf/path.conf
 ADD config/start-php-stable.conf.txt /nuoyis-web/nginx/server/conf/start-php-stable.conf
+ADD config/head.conf.txt /nuoyis-web/nginx/server/conf/head.conf.txt
 ADD config/latest-php.ini.txt /nuoyis-web/php/latest/etc/php.ini
 ADD config/fpm-latest.conf.txt /nuoyis-web/php/latest/etc/php-fpm.d/fpm.conf
 ADD config/stable-php.ini.txt /nuoyis-web/php/stable/etc/php.ini
@@ -296,8 +298,12 @@ ADD config/fpm-stable.conf.txt /nuoyis-web/php/stable/etc/php-fpm.d/fpm.conf
 ADD config/supervisord.conf.txt /nuoyis-web/supervisord/supervisord.conf
 ADD config/index.html /nuoyis-web/nginx/server/template/index.html
 ADD config/default.conf.txt /nuoyis-web/nginx/server/template/default.conf
-ADD config/nginx.conf.template.txt /nuoyis-web/nginx/server/template/nginx.conf.template
+ADD config/nginx.conf.full.template.txt /nuoyis-web/nginx/server/template/nginx.conf.full.template
+ADD config/nginx.conf.succinct.template.txt /nuoyis-web/nginx/server/template/nginx.conf.succinct.template
 ADD start.sh /nuoyis-web/start.sh
+
+# 防止windows字符造成无法读取
+RUN find "/nuoyis-web" -type f -exec dos2unix {} \;
 
 # so环境获取
 RUN mkdir -p /runner-libs /otherlibs && \
@@ -340,6 +346,7 @@ RUN if [ -d /runner-libs ]; then \
     chown -R nuoyis-web:nuoyis-web /nuoyis-web;\
     chown -R nuoyis-web:nuoyis-web /run;\
     chmod -R 775 /run;\
+    chmod -R 775 /nuoyis-web;\
     chmod +x /nuoyis-web/start.sh;\
     mkdir /docker-entrypoint-initdb.d;\
     sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\

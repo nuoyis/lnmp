@@ -12,7 +12,7 @@ os_id=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
 case "$os_id" in
     debian|ubuntu)
         apt-get update
-        apt-get install -y jq
+        apt-get install -y jq dos2unix
         ;;
     centos|rhel|fedora)
         yum install -y jq

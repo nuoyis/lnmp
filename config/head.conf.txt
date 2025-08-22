@@ -1,0 +1,16 @@
+listen 80;
+listen 443 ssl;
+listen [::]:443 ssl;
+listen 443 quic;
+listen [::]:443 quic;
+http2 on;
+charset utf-8;
+add_header Alt-Svc 'quic=":443"; h3-27=":443";h3-25=":443"; h3-T050=":443"; h3-Q050=":443";h3-Q049=":443";h3-Q048=":443"; h3-Q046=":443"; h3-Q043=":443";ma=86400';
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+ssl_prefer_server_ciphers on;
+ssl_stapling on;
+ssl_stapling_verify on;
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 10m;
+

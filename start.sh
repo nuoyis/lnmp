@@ -15,17 +15,14 @@ if [ ! -f "/nuoyis-web/nginx/conf/default.conf" ]; then
 else
   echo "default page is found. then use default page of html"
 fi
-cp /nuoyis-web/nginx/server/template/nginx.conf.template /nuoyis-web/nginx/conf/nginx.conf.template
+cp /nuoyis-web/nginx/server/template/nginx.conf.full.template /nuoyis-web/nginx/conf/nginx.conf.full.template
+cp /nuoyis-web/nginx/server/template/nginx.conf.succinct.template /nuoyis-web/nginx/conf/nginx.conf.succinct.template
 mkdir -p /nuoyis-web/logs/nginx/
 touch /nuoyis-web/logs/nginx/error.log
 echo "nginx service checkd"
 # mariadb 类启动检查
 echo "check database service"
-chown -R nuoyis-web:nuoyis-web /nuoyis-web
-chown -R nuoyis-web:nuoyis-web /run
-chmod -R 775 /run
-chmod -R 775 /nuoyis-web
-MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)}"
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')}"
 LOCK_DIR=/docker-entrypoint-initdb.d/lockfiles
 INIT_LOCK=$LOCK_DIR/.init.lock
 IMPORT_LOCK=$LOCK_DIR/.import.lock
