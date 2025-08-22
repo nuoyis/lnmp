@@ -290,7 +290,7 @@ ADD config/ssl/default.key /nuoyis-web/nginx/server/conf/ssl/default.key
 ADD config/start-php-latest.conf.txt /nuoyis-web/nginx/server/conf/start-php-latest.conf
 ADD config/path.conf.txt /nuoyis-web/nginx/server/conf/path.conf
 ADD config/start-php-stable.conf.txt /nuoyis-web/nginx/server/conf/start-php-stable.conf
-ADD config/head.conf.txt /nuoyis-web/nginx/server/conf/head.conf.txt
+ADD config/head.conf.txt /nuoyis-web/nginx/server/conf/head.conf
 ADD config/latest-php.ini.txt /nuoyis-web/php/latest/etc/php.ini
 ADD config/fpm-latest.conf.txt /nuoyis-web/php/latest/etc/php-fpm.d/fpm.conf
 ADD config/stable-php.ini.txt /nuoyis-web/php/stable/etc/php.ini

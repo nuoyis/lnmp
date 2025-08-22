@@ -1,7 +1,7 @@
 # 默认模板页面
 server {
     # 引入头部文件
-    include head.conf
+    include head.conf;
     server_name template;
     # SSL 配置
     ssl_certificate /nuoyis-web/nginx/ssl/template.pem;
@@ -18,7 +18,7 @@ server {
     error_page 500 502 503 504 /50x.html;
     # php引入方式
     # 最新模式（php8+）
-    include start-php-latest.conf
+    include start-php-latest.conf;
     # 兼容模式（php7.4）
     include start-php-stable.conf;        
     # 伪静态
