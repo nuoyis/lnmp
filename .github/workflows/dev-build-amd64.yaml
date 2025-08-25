@@ -39,4 +39,4 @@ jobs:
           workflow: dev-build-arm64.yaml
           repo: ${{ github.repository }}
           ref: dev
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.MY_PAT_TOKEN }}
