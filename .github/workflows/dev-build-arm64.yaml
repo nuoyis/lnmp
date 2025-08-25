@@ -7,7 +7,8 @@ jobs:
   build-arm64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -27,11 +28,3 @@ jobs:
             --platform linux/arm64 \
             -t nuoyis1024/nuoyis-lnmp:dev-arm64 \
             --push .
-
-      - name: Merge manifest
-        run: |
-          docker buildx imagetools create \
-            -t nuoyis1024/nuoyis-lnmp:dev \
-            nuoyis1024/nuoyis-lnmp:dev-amd64 \
-            nuoyis1024/nuoyis-lnmp:dev-arm64
-            
