@@ -1,4 +1,4 @@
-name: Build AMD64 Image 2
+name: Build AMD64 Image
 
 on:
   push:
