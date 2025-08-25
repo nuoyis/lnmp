@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'dockerfile'
+      - 'config/**'
+      - 'software/**'
+      - '.github/workflows/**'
 
 jobs:
   build-amd64:
