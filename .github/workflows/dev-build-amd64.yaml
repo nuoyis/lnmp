@@ -5,6 +5,7 @@ on:
     branches:
       - dev
     paths:
+      - 'start.sh'
       - 'dockerfile'
       - 'config/**'
       - 'software/**'

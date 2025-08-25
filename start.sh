@@ -4,7 +4,14 @@
 
 echo "Welcome use nuoyis's lnmp service"
 
-# nginx/php 类启动检查
+# 重新设置全局权限,防止挂载权限拒绝
+chown -R nuoyis-web:nuoyis-web /nuoyis-web;
+chown -R nuoyis-web:nuoyis-web /run;
+chmod -R 775 /run;
+chmod -R 775 /nuoyis-web;
+chmod g+s /nuoyis-web;
+
+# nginx/php 文件/服务检查
 # 默认HTML
 echo "check nginx service"
 if [ ! -f "/nuoyis-web/nginx/conf/default.conf" ]; then
@@ -19,9 +26,7 @@ cp /nuoyis-web/nginx/server/template/nginx.conf.full.template /nuoyis-web/nginx/
 cp /nuoyis-web/nginx/server/template/nginx.conf.succinct.template /nuoyis-web/nginx/conf/nginx.conf.succinct.template
 mkdir -p /nuoyis-web/logs/nginx/
 touch /nuoyis-web/logs/nginx/error.log
-# nginx logs 文件权限放行，不然会报错
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs/nginx/
-chmod -R 755 /nuoyis-server/web/logs
+
 echo "nginx service checkd"
 # mariadb 类启动检查
 echo "check database service"

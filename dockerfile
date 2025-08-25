@@ -347,6 +347,7 @@ RUN if [ -d /runner-libs ]; then \
     chown -R nuoyis-web:nuoyis-web /run;\
     chmod -R 775 /run;\
     chmod -R 775 /nuoyis-web;\
+    chmod g+s /nuoyis-web;\
     chmod +x /nuoyis-web/start.sh;\
     mkdir /docker-entrypoint-initdb.d;\
     sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\

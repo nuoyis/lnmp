@@ -78,7 +78,7 @@ spec:
             path: /nuoyis-server/web/nginx/ssl
         - name: logs
           hostPath:
-            path: /nuoyis-server/logs/nginx
+            path: /var/log/nuoyis-web
         - name: mariadb-init
           hostPath:
             path: /nuoyis-server/web/mariadb/init
