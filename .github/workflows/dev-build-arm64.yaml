@@ -28,6 +28,7 @@ jobs:
             --platform linux/arm64 \
             -t nuoyis1024/nuoyis-lnmp:dev-arm64 \
             --push .
+<<<<<<< HEAD
 
       - name: Merge manifest
         run: |
@@ -35,3 +36,5 @@ jobs:
             -t nuoyis1024/nuoyis-lnmp:dev \
             nuoyis1024/nuoyis-lnmp:dev-amd64 \
             nuoyis1024/nuoyis-lnmp:dev-arm64
+=======
+>>>>>>> 3ab5c0646b6a861b4b7fe7e7f0cf3c2fad92d8ba
