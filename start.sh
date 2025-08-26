@@ -4,12 +4,11 @@
 
 echo "Welcome use nuoyis's lnmp service"
 
-# 重新设置全局权限,防止挂载权限拒绝
-chown -R nuoyis-web:nuoyis-web /nuoyis-web;
-chown -R nuoyis-web:nuoyis-web /run;
-chmod -R 775 /run;
-chmod -R 775 /nuoyis-web;
-chmod g+s /nuoyis-web;
+# 重新设置文件权限,防止挂载权限拒绝
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/conf;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/webside;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/ssl;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs;
 
 # nginx/php 文件/服务检查
 # 默认HTML
