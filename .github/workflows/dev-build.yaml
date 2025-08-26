@@ -22,7 +22,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build arm64
+      - name: Build amd64
         run: |
           docker buildx build \
             -t nuoyis1024/nuoyis-lnmp:dev-amd64 \
