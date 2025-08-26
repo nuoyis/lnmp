@@ -3,7 +3,7 @@ services:
     container_name: nuoyis-lnmp
     image: nuoyis1024/nuoyis-lnmp:latest
     networks: 
-      nuoyis-net:
+      nuoyis-lnmp-net:
         aliases:
           - nuoyis-lnmp
     ports:
