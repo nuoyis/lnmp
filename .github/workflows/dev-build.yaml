@@ -25,7 +25,7 @@ jobs:
       - name: Build amd64
         run: |
           docker buildx build \
-            -t nuoyis1024/nuoyis-lnmp:dev-amd64 \
+            -t nuoyis1024/nuoyis-lnmp:amd64 \
             --push .
 
   build-arm64:
@@ -40,7 +40,7 @@ jobs:
       - name: Build arm64
         run: |
           docker buildx build \
-            -t nuoyis1024/nuoyis-lnmp:dev-arm \
+            -t nuoyis1024/nuoyis-lnmp:dev-arm64 \
             --push .
 
   create-manifest:
@@ -57,7 +57,7 @@ jobs:
       - name: Create & Push Multi-arch Manifest
         run: |
           docker manifest create nuoyis1024/nuoyis-lnmp:dev \
-            --amend nuoyis1024/nuoyis-lnmp:dev-x86 \
-            --amend nuoyis1024/nuoyis-lnmp:dev-arm
+            --amend nuoyis1024/nuoyis-lnmp:dev-amd64 \
+            --amend nuoyis1024/nuoyis-lnmp:dev-arm64
 
           docker manifest push nuoyis1024/nuoyis-lnmp:dev
