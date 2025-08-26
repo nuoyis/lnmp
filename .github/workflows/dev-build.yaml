@@ -55,7 +55,7 @@ jobs:
       - name: Build & Push ARM64
         run: |
           docker buildx build \
-            --platform linux/arm64,linux/arm/v7 \
+            --platform linux/arm64 \
             -t nuoyis1024/nuoyis-lnmp:dev-arm \
             --push .
       
