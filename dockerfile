@@ -191,14 +191,14 @@ RUN export $(cat /tmp/version.env); \
             export buildtype=stable;\
             export CURL_PREFIX="/nuoyis-web/curl-openssl";\
             export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-1.1.1";\
-            CONFIG_CURL="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}";\
+            PHPCONFIG="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}";\
             export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include";\
             export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}";\
         else \
             unset CXXFLAGS CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH;\
             export buildtype=latest;\
             export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-3.5.2";\
-            CONFIG_CURL="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}";\
+            PHPCONFIG="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}";\
         fi;\
         export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib";\
         export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}";\
@@ -212,7 +212,7 @@ RUN export $(cat /tmp/version.env); \
             --with-libdir=lib64 \
             --with-libxml \
             --with-mysqli \
-            $OPENSSL_PREFIX \
+            $PHPCONFIG \
             --with-pdo-mysql \
             --with-pdo-sqlite \
             --with-pear \
