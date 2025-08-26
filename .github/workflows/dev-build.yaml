@@ -25,7 +25,7 @@ jobs:
       - name: Build amd64
         run: |
           docker buildx build \
-            -t nuoyis1024/nuoyis-lnmp:amd64 \
+            -t nuoyis1024/nuoyis-lnmp:dev-amd64 \
             --push .
 
   build-arm64:
