@@ -14,6 +14,7 @@ nuoyis-lnmp 作为从原nuoyis-lnmp-np和mariadb配合使用的容器转变为�
 
 ## 结尾
 
-欢迎使用该镜像来部署你的站点,使用php 仅需include就行。开启https/https3 仅需include head.conf即可开启。同时为用户在conf页面提供了两个模板，一个是全部无缩减版本，用于防止镜像bug,一个是精简版本，仅需复制修改少量内容即可上线网站。
-更多详细内容请看https://blog.nuoyis.net/posts/28fb.html 和 https://blog.nuoyis.net/posts/abed.html
+欢迎使用该镜像来部署你的站点,使用php仅需include就行开启https/https3  
+仅需include head.conf即可开启同时为用户在conf页面提供了两个模板，一个是全部无缩减版本，用于防止镜像bug,一个是精简版本，仅需复制修改少量内容即可上线网站  
+更多详细内容请看https://blog.nuoyis.net/posts/28fb.html 和 https://blog.nuoyis.net/posts/abed.html  
 首次运行正常访问ip会弹出：welcome to use nuoyis service
