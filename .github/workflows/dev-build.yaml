@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build amd64
         run: |
-          docker build -t nuoyis1024/nuoyis-lnmp:dev-amd64 .
+          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:dev-amd64 .
           docker push nuoyis1024/nuoyis-lnmp:dev-amd64
 
   build-arm64:
@@ -42,7 +42,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build arm64
         run: |
-          docker build -t nuoyis1024/nuoyis-lnmp:dev-arm64 .
+          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:dev-arm64 .
           docker push nuoyis1024/nuoyis-lnmp:dev-arm64
 
   create-manifest:
