@@ -4,12 +4,6 @@
 
 echo "Welcome use nuoyis's lnmp service"
 
-# 重新设置文件权限,防止挂载权限拒绝
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/conf;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/webside;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/ssl;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs;
-
 # nginx/php 文件/服务检查
 # 默认HTML
 echo "check nginx service"
@@ -23,9 +17,10 @@ else
 fi
 cp /nuoyis-web/nginx/server/template/nginx.conf.full.template /nuoyis-web/nginx/conf/nginx.conf.full.template
 cp /nuoyis-web/nginx/server/template/nginx.conf.succinct.template /nuoyis-web/nginx/conf/nginx.conf.succinct.template
-mkdir -p /nuoyis-web/logs/nginx/
+mkdir -p /nuoyis-web/logs/{nginx,php/{latest,stable}}
 touch /nuoyis-web/logs/nginx/error.log
-
+touch /nuoyis-web/logs/php/latest/www-error.log
+touch /nuoyis-web/logs/php/stable/www-error.log
 echo "nginx service checkd"
 # mariadb 类启动检查
 echo "check database service"
@@ -92,6 +87,12 @@ if [ -n "$mariadb_pid" ]; then
 fi
 
 echo "database service checkd"
+
+# 重新设置文件权限,防止挂载权限拒绝
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/conf;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/webside;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/ssl;
+chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs;
 
 echo "nuoyis service is starting"
 exec "$@"

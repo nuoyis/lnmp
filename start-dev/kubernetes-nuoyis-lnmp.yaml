@@ -1,8 +1,3 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: nuoyis-lnmp
----
 # ===================== Deployment: nuoyis-lnmp =====================
 apiVersion: apps/v1
 kind: Deployment
