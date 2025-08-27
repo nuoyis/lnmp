@@ -1,11 +1,11 @@
 [global]
 pid = /run/php/latest/php-fpm.pid
-error_log = /run/php/latest/php-fpm.log
-log_level = notice
+error_log = /nuoyis-web/logs/php/latest/php-fpm.log
+log_level = warning
 
 [www]
-user = nuoyis-web
-group = nuoyis-web
+;user = nuoyis-web
+;group = nuoyis-web
 
 listen = /run/php-cgi-latest.sock
 listen.owner = nuoyis-web
@@ -17,5 +17,5 @@ pm.start_servers = 3
 pm.min_spare_servers = 2
 pm.max_spare_servers = 5
 
-php_admin_value[error_log] = /var/log/php-fpm/www-error.log
+php_admin_value[error_log] = /nuoyis-web/logs/php/latest/www-error.log
 php_admin_flag[log_errors] = on

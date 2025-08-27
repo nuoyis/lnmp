@@ -83,7 +83,7 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
 RUN export $(cat /tmp/version.env); \
     mkdir -p /nuoyis-build/php-$PHP_LATEST_VERSION/ext/php-redis \
     /nuoyis-build/php-7.4.33/ext/php-redis \
-    /nuoyis-web/{logs/nginx,nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
+    /nuoyis-web/{logs/{nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
     /var/run/php/{stable,latest} \
     /nuoyis-web/{supervisord,mariadb/{data,config,logs}}
 
