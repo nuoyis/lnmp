@@ -11,6 +11,13 @@ on:
       - 'software/**'
       - '.github/workflows/**'
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-amd64:
     runs-on: ubuntu-latest
