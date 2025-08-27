@@ -107,7 +107,7 @@ jobs:
         run: |
           docker build --no-cache -t nuoyis1024/nuoyis-lnmp:arm64 .
           docker push nuoyis1024/nuoyis-lnmp:arm64
-          docker rm -f nuoyis1024/nuoyis-lnmp:arm64
+          docker rmi nuoyis1024/nuoyis-lnmp:arm64
 
   create-manifest:
     runs-on: ubuntu-latest
