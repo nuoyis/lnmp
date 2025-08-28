@@ -4,11 +4,11 @@
 # return 301 https://你的网站名$request_uri;
 
 # SSL 配置
-ssl_certificate /nuoyis-web/nginx/server/conf/ssl/default.pem;
-ssl_certificate_key /nuoyis-web/nginx/server/conf/ssl/default.key;
+ssl_certificate /web/nginx/server/conf/ssl/default.pem;
+ssl_certificate_key /web/nginx/server/conf/ssl/default.key;
         
 # 默认页面设置
-root /nuoyis-web/nginx/webside/default;
+root /web/nginx/webside/default;
 index index.html;
 
 # 错误页面配置

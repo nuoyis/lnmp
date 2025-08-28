@@ -14,8 +14,8 @@ server {
     # listen 443 ssl;
     server_name template;
     # SSL 配置
-    ssl_certificate /nuoyis-web/nginx/ssl/template.pem;
-    ssl_certificate_key /nuoyis-web/nginx/ssl/template.key;
+    ssl_certificate /web/nginx/ssl/template.pem;
+    ssl_certificate_key /web/nginx/ssl/template.key;
     add_header Alt-Svc 'quic=":443"; h3-27=":443";h3-25=":443"; h3-T050=":443"; h3-Q050=":443";h3-Q049=":443";h3-Q048=":443"; h3-Q046=":443"; h3-Q043=":443";ma=86400';
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
@@ -26,7 +26,7 @@ server {
     ssl_session_timeout 10m;
     
     charset utf-8;
-    root /nuoyis-web/nginx/webside/default;
+    root /web/nginx/webside/default;
     index index.html;
     
     # http跳转https
@@ -76,6 +76,6 @@ server {
     }
     
     # 日志系统
-    access_log  /nuoyis-web/logs/nginx/template.log;
-    error_log  /nuoyis-web/logs/nginx/template.log;
+    access_log  /web/logs/nginx/template.log;
+    error_log  /web/logs/nginx/template.log;
 }

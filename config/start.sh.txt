@@ -7,20 +7,20 @@ echo "Welcome use nuoyis's lnmp service"
 # nginx/php 文件/服务检查
 # 默认HTML
 echo "check nginx service"
-if [ ! -f "/nuoyis-web/nginx/conf/default.conf" ]; then
+if [ ! -f "/web/nginx/conf/default.conf" ]; then
   echo "default page is not found. then create new default page of html"
-  mkdir -p /nuoyis-web/nginx/webside/default/
-  cp /nuoyis-web/nginx/server/template/index.html /nuoyis-web/nginx/webside/default/index.html
-  cp /nuoyis-web/nginx/server/template/default.conf /nuoyis-web/nginx/conf/default.conf
+  mkdir -p /web/nginx/webside/default/
+  cp /web/nginx/server/template/index.html /web/nginx/webside/default/index.html
+  cp /web/nginx/server/template/default.conf /web/nginx/conf/default.conf
 else
   echo "default page is found. then use default page of html"
 fi
-cp /nuoyis-web/nginx/server/template/nginx.conf.full.template /nuoyis-web/nginx/conf/nginx.conf.full.template
-cp /nuoyis-web/nginx/server/template/nginx.conf.succinct.template /nuoyis-web/nginx/conf/nginx.conf.succinct.template
-mkdir -p /nuoyis-web/logs/{nginx,php/{latest,stable}}
-touch /nuoyis-web/logs/nginx/error.log
-touch /nuoyis-web/logs/php/latest/www-error.log
-touch /nuoyis-web/logs/php/stable/www-error.log
+cp /web/nginx/server/template/nginx.conf.full.template /web/nginx/conf/nginx.conf.full.template
+cp /web/nginx/server/template/nginx.conf.succinct.template /web/nginx/conf/nginx.conf.succinct.template
+mkdir -p /web/logs/{nginx,php/{latest,stable}}
+touch /web/logs/nginx/error.log
+touch /web/logs/php/latest/www-error.log
+touch /web/logs/php/stable/www-error.log
 echo "nginx service checkd"
 # mariadb 类启动检查
 echo "check database service"
@@ -28,9 +28,9 @@ MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-$(openssl rand -base64 12 | tr -dc '
 LOCK_DIR=/docker-entrypoint-initdb.d/lockfiles
 INIT_LOCK=$LOCK_DIR/.init.lock
 IMPORT_LOCK=$LOCK_DIR/.import.lock
-DEFAULTCNF=/nuoyis-web/mariadb/config/my.cnf
-touch /nuoyis-web/logs/mariadb/mariadb-error.log
-touch /nuoyis-web/logs/mariadb/slow.log
+DEFAULTCNF=/web/mariadb/config/my.cnf
+touch /web/logs/mariadb/mariadb-error.log
+touch /web/logs/mariadb/slow.log
 
 if [ ! -f "$DEFAULTCNF" ]; then
     cat > $DEFAULTCNF << EOF
@@ -42,10 +42,10 @@ expire_logs_days=7
 binlog_format=ROW
 slave_skip_errors=1062
 socket=/run/mariadb/mariadb.sock
-datadir=/nuoyis-web/mariadb/data
-log_error = /nuoyis-web/logs/mariadb/mariadb-error.log
-general_log_file = /nuoyis-web/logs/mariadb/general.log
-slow_query_log_file = /nuoyis-web/logs/mariadb/slow.log
+datadir=/web/mariadb/data
+log_error = /web/logs/mariadb/mariadb-error.log
+general_log_file = /web/logs/mariadb/general.log
+slow_query_log_file = /web/logs/mariadb/slow.log
 general_log = 1
 slow_query_log = 1
 long_query_time = 1
@@ -57,8 +57,8 @@ fi
 mkdir -p "$LOCK_DIR"
 if [ ! -f "$INIT_LOCK" ]; then
   echo "init database..."
-  /nuoyis-web/mariadb/scripts/mariadb-install-db --datadir=/nuoyis-web/mariadb/data --user=nuoyis-web
-  mariadbd-safe --datadir=/nuoyis-web/mariadb/data --user=nuoyis-web &
+  /web/mariadb/scripts/mariadb-install-db --datadir=/web/mariadb/data --user=web
+  mariadbd-safe --datadir=/web/mariadb/data --user=web &
   mariadb_pid=$!
   until mariadb -u root -e "SELECT 1;" &>/dev/null; do
         echo "Waiting for MariaDB to be ready..."
@@ -91,11 +91,11 @@ fi
 echo "database service checkd"
 
 # 重新设置文件权限,防止挂载权限拒绝
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/conf;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/webside;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/ssl;
-chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs;
+chown -R web:web /web/nginx/conf;
+chown -R web:web /web/nginx/webside;
+chown -R web:web /web/nginx/ssl;
+chown -R web:web /web/logs;
 
 echo "nuoyis service is starting"
-echo "show starting logs at /var/log/nuoyis-web/"
+echo "show starting logs at /var/log/web/"
 exec "$@"

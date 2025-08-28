@@ -1,17 +1,11 @@
-name: Build Multi-Arch Image (dev)
+name: Autobuild Docker Images
 
 on:
+  workflow_dispatch:    # 可手动触发
   push:
-    branches:
-      - dev
     paths:
-      - 'start.sh'
-      - 'dockerfile'
-      - 'config/**'
-      - 'software/**'
-      - '.github/workflows/**'
-  workflow_dispatch: # 支持手动触发
-
+      - 'versions.json' # 只在 versions.json 改动时触发
+  
 permissions:
   contents: write
 
@@ -32,10 +26,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build amd64
         run: |
-          docker build --no-cache -t nuoyis1024/lnmp:dev-amd64 .
-          docker push nuoyis1024/lnmp:dev-amd64
-          docker tag nuoyis1024/lnmp:dev-amd64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-amd64
-          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-amd64
+          docker build --no-cache -t nuoyis1024/lnmp:autobuild-amd64 .
+          docker push nuoyis1024/lnmp:autobuild-amd64
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -49,16 +41,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build arm64
         run: |
-          docker build --no-cache -t nuoyis1024/lnmp:dev-arm64 .
-          docker push nuoyis1024/lnmp:dev-arm64
-          docker tag nuoyis1024/lnmp:dev-arm64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-arm64
-          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-arm64
+          docker build --no-cache -t nuoyis1024/lnmp:autobuild-arm64 .
+          docker push nuoyis1024/lnmp:autobuild-arm64
 
   create-manifest:
     runs-on: ubuntu-latest
     needs: [build-amd64, build-arm64]
     steps:
       - uses: actions/checkout@v4
+
       - name: Log in to aliyunHub
         run: docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
       - uses: docker/login-action@v3
@@ -68,11 +59,13 @@ jobs:
 
       - name: Create & Push Multi-arch Manifest
         run: |
-          docker manifest create nuoyis1024/lnmp:dev \
-            --amend nuoyis1024/lnmp:dev-amd64 \
-            --amend nuoyis1024/lnmp:dev-arm64
-          docker manifest push nuoyis1024/lnmp:dev
-          docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev \
-            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-amd64 \
-            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-arm64
-          docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev
+          docker manifest create nuoyis1024/lnmp:autobuild \
+            --amend nuoyis1024/lnmp:autobuild-amd64 \
+            --amend nuoyis1024/lnmp:autobuild-arm64
+
+          docker manifest push nuoyis1024/lnmp:autobuild
+
+          docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64 \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64
+          docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild

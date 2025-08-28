@@ -36,19 +36,19 @@ spec:
               containerPort: 3306
           volumeMounts:
             - name: nginx-conf
-              mountPath: /nuoyis-web/nginx/conf
+              mountPath: /web/nginx/conf
             - name: nginx-webside
-              mountPath: /nuoyis-web/nginx/webside
+              mountPath: /web/nginx/webside
             - name: nginx-ssl
-              mountPath: /nuoyis-web/nginx/ssl
+              mountPath: /web/nginx/ssl
             - name: logs
-              mountPath: /nuoyis-web/logs
+              mountPath: /web/logs
             - name: mariadb-init
               mountPath: /docker-entrypoint-initdb.d
             - name: mariadb-data
-              mountPath: /nuoyis-web/mariadb/data
+              mountPath: /web/mariadb/data
             - name: mariadb-config
-              mountPath: /nuoyis-web/config
+              mountPath: /web/config
             - name: shm
               mountPath: /dev/shm
           startupProbe:
@@ -56,7 +56,7 @@ spec:
               command:
                 - /bin/bash
                 - -c
-                - /nuoyis-web/healthcheck.sh
+                - /web/healthcheck.sh
             failureThreshold: 30
             periodSeconds: 10
           livenessProbe:
@@ -64,7 +64,7 @@ spec:
               command:
                 - /bin/bash
                 - -c
-                - /nuoyis-web/healthcheck.sh
+                - /web/healthcheck.sh
             initialDelaySeconds: 5
             failureThreshold: 5
             periodSeconds: 8
@@ -73,7 +73,7 @@ spec:
               command:
                 - /bin/bash
                 - -c
-                - /nuoyis-web/healthcheck.sh
+                - /web/healthcheck.sh
             initialDelaySeconds: 5
             failureThreshold: 3
             periodSeconds: 8
@@ -89,7 +89,7 @@ spec:
             path: /nuoyis-server/web/nginx/ssl
         - name: logs
           hostPath:
-            path: /var/log/nuoyis-web
+            path: /var/log/web
         - name: mariadb-init
           hostPath:
             path: /nuoyis-server/web/mariadb/init
