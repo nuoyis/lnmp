@@ -81,3 +81,65 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build amd64
+        run: |
+          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:amd64 .
+          docker push nuoyis1024/nuoyis-lnmp:amd64
+
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build arm64
+        run: |
+          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:arm64 .
+          docker push nuoyis1024/nuoyis-lnmp:arm64
+          docker rmi nuoyis1024/nuoyis-lnmp:arm64
+
+  create-manifest:
+    runs-on: ubuntu-latest
+    needs: [build-amd64, build-arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create & Push Multi-arch Manifest
+        run: |
+          docker manifest create nuoyis1024/nuoyis-lnmp:${{ needs.release-and-build.outputs.new_tag }} \
+            --amend nuoyis1024/nuoyis-lnmp:amd64 \
+            --amend nuoyis1024/nuoyis-lnmp:arm64
+
+          docker manifest push nuoyis1024/nuoyis-lnmp:${{ needs.release-and-build.outputs.new_tag }}
+
+          docker manifest create nuoyis1024/nuoyis-lnmp:latest \
+            --amend nuoyis1024/nuoyis-lnmp:amd64 \
+            --amend nuoyis1024/nuoyis-lnmp:arm64
+
+          docker manifest push nuoyis1024/nuoyis-lnmp:latest
+
+          docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:${{ needs.release-and-build.outputs.new_tag }} \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:amd64 \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:arm64
+          docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:${{ needs.release-and-build.outputs.new_tag }}
+
+          docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:latest \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:amd64 \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:arm64
+          docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:latest

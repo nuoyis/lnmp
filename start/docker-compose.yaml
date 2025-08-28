@@ -3,7 +3,7 @@ services:
     container_name: nuoyis-lnmp
     image: nuoyis1024/nuoyis-lnmp:latest
     networks: 
-      nuoyis-net:
+      nuoyis-lnmp-net:
         aliases:
           - nuoyis-lnmp
     ports:
@@ -19,7 +19,7 @@ services:
       # nginx ssl
       - /nuoyis-server/web/nginx/ssl:/nuoyis-web/nginx/ssl
       # Log 目录
-      - /var/log:/nuoyis-web/logs
+      - /var/log/nuoyis-web:/nuoyis-web/logs
       # mariadb 数据与配置
       - /nuoyis-server/web/mariadb/init:/docker-entrypoint-initdb.d
       # MariaDB 数据目录

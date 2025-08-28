@@ -83,7 +83,7 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
 RUN export $(cat /tmp/version.env); \
     mkdir -p /nuoyis-build/php-$PHP_LATEST_VERSION/ext/php-redis \
     /nuoyis-build/php-7.4.33/ext/php-redis \
-    /nuoyis-web/{logs/nginx,nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
+    /nuoyis-web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
     /var/run/php/{stable,latest} \
     /nuoyis-web/{supervisord,mariadb/{data,config,logs}}
 
@@ -191,14 +191,14 @@ RUN export $(cat /tmp/version.env); \
             export buildtype=stable;\
             export CURL_PREFIX="/nuoyis-web/curl-openssl";\
             export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-1.1.1";\
-            CONFIG_CURL="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}";\
+            PHPCONFIG="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}";\
             export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include";\
             export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}";\
         else \
             unset CXXFLAGS CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH;\
             export buildtype=latest;\
             export OPENSSL_PREFIX_PATH="/nuoyis-web/openssl-3.5.2";\
-            CONFIG_CURL="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}";\
+            PHPCONFIG="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}";\
         fi;\
         export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib";\
         export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}";\
@@ -212,7 +212,7 @@ RUN export $(cat /tmp/version.env); \
             --with-libdir=lib64 \
             --with-libxml \
             --with-mysqli \
-            $OPENSSL_PREFIX \
+            $PHPCONFIG \
             --with-pdo-mysql \
             --with-pdo-sqlite \
             --with-pear \
@@ -300,7 +300,8 @@ ADD config/index.html /nuoyis-web/nginx/server/template/index.html
 ADD config/default.conf.txt /nuoyis-web/nginx/server/template/default.conf
 ADD config/nginx.conf.full.template.txt /nuoyis-web/nginx/server/template/nginx.conf.full.template
 ADD config/nginx.conf.succinct.template.txt /nuoyis-web/nginx/server/template/nginx.conf.succinct.template
-ADD start.sh /nuoyis-web/start.sh
+ADD config/start.sh.txt /nuoyis-web/start.sh
+ADD config/healthcheck.sh.txt /nuoyis-web/healthcheck.sh
 
 # 防止windows字符造成无法读取
 RUN find "/nuoyis-web" -type f -exec dos2unix {} \;
@@ -347,7 +348,9 @@ RUN if [ -d /runner-libs ]; then \
     chown -R nuoyis-web:nuoyis-web /run;\
     chmod -R 775 /run;\
     chmod -R 775 /nuoyis-web;\
+    chmod g+s /nuoyis-web;\
     chmod +x /nuoyis-web/start.sh;\
+    chmod +x /nuoyis-web/healthcheck.sh;\
     mkdir /docker-entrypoint-initdb.d;\
     sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
