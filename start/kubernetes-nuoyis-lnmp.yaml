@@ -6,6 +6,8 @@ metadata:
   namespace: default
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: nuoyis-lnmp
@@ -49,22 +51,32 @@ spec:
               mountPath: /nuoyis-web/config
             - name: shm
               mountPath: /dev/shm
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /nuoyis-web/healthcheck.sh
+            failureThreshold: 30
+            periodSeconds: 10
           livenessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - /nuoyis-web/healthcheck.sh
-            initialDelaySeconds: 20
-            periodSeconds: 30
+            initialDelaySeconds: 5
+            failureThreshold: 5
+            periodSeconds: 8
           readinessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
-                - /healthcheck.sh
-            initialDelaySeconds: 20
-            periodSeconds: 30
+                - /nuoyis-web/healthcheck.sh
+            initialDelaySeconds: 5
+            failureThreshold: 3
+            periodSeconds: 8
       volumes:
         - name: nginx-conf
           hostPath:

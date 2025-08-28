@@ -29,6 +29,8 @@ LOCK_DIR=/docker-entrypoint-initdb.d/lockfiles
 INIT_LOCK=$LOCK_DIR/.init.lock
 IMPORT_LOCK=$LOCK_DIR/.import.lock
 DEFAULTCNF=/nuoyis-web/mariadb/config/my.cnf
+touch /nuoyis-web/logs/mariadb/mariadb-error.log
+touch /nuoyis-web/logs/mariadb/slow.log
 
 if [ ! -f "$DEFAULTCNF" ]; then
     cat > $DEFAULTCNF << EOF
@@ -41,9 +43,9 @@ binlog_format=ROW
 slave_skip_errors=1062
 socket=/run/mariadb/mariadb.sock
 datadir=/nuoyis-web/mariadb/data
-log_error = /nuoyis-web/mariadb/logs/mariadb-error.log
-general_log_file = /nuoyis-web/mariadb/logs/general.log
-slow_query_log_file = /nuoyis-web/mariadb/logs/slow.log
+log_error = /nuoyis-web/logs/mariadb/mariadb-error.log
+general_log_file = /nuoyis-web/logs/mariadb/general.log
+slow_query_log_file = /nuoyis-web/logs/mariadb/slow.log
 general_log = 1
 slow_query_log = 1
 long_query_time = 1
@@ -95,4 +97,5 @@ chown -R nuoyis-web:nuoyis-web /nuoyis-web/nginx/ssl;
 chown -R nuoyis-web:nuoyis-web /nuoyis-web/logs;
 
 echo "nuoyis service is starting"
+echo "show starting logs at /var/log/nuoyis-web/"
 exec "$@"
