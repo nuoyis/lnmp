@@ -300,7 +300,8 @@ ADD config/index.html /nuoyis-web/nginx/server/template/index.html
 ADD config/default.conf.txt /nuoyis-web/nginx/server/template/default.conf
 ADD config/nginx.conf.full.template.txt /nuoyis-web/nginx/server/template/nginx.conf.full.template
 ADD config/nginx.conf.succinct.template.txt /nuoyis-web/nginx/server/template/nginx.conf.succinct.template
-ADD start.sh /nuoyis-web/start.sh
+ADD config/start.sh.txt /nuoyis-web/start.sh
+ADD config/healthcheck.sh.txt /nuoyis-web/healthcheck.sh
 
 # 防止windows字符造成无法读取
 RUN find "/nuoyis-web" -type f -exec dos2unix {} \;
@@ -349,6 +350,7 @@ RUN if [ -d /runner-libs ]; then \
     chmod -R 775 /nuoyis-web;\
     chmod g+s /nuoyis-web;\
     chmod +x /nuoyis-web/start.sh;\
+    chmod +x /nuoyis-web/healthcheck.sh;\
     mkdir /docker-entrypoint-initdb.d;\
     sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\

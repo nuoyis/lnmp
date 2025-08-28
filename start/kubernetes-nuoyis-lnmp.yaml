@@ -50,16 +50,20 @@ spec:
             - name: shm
               mountPath: /dev/shm
           livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /nuoyis-web/healthcheck.sh
+            initialDelaySeconds: 20
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /healthcheck.sh
+            initialDelaySeconds: 20
             periodSeconds: 30
       volumes:
         - name: nginx-conf
