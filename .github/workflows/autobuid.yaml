@@ -1,9 +1,17 @@
-name: Auto Build on Version Update
+name: Autobuild Docker Images
 
 on:
-  repository_dispatch:
-    types: [autobuild-trigger]
-  workflow_dispatch:
+  workflow_dispatch:    # 可手动触发
+  push:
+    paths:
+      - 'versions.json' # 只在 versions.json 改动时触发
+  
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-amd64:
@@ -16,8 +24,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build amd64
         run: |
-          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:autobuild-amd64 .
-          docker push nuoyis1024/nuoyis-lnmp:autobuild-amd64
+          docker build --no-cache -t nuoyis1024/lnmp:autobuild-amd64 .
+          docker push nuoyis1024/lnmp:autobuild-amd64
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -29,8 +37,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build arm64
         run: |
-          docker build --no-cache -t nuoyis1024/nuoyis-lnmp:autobuild-arm64 .
-          docker push nuoyis1024/nuoyis-lnmp:autobuild-arm64
+          docker build --no-cache -t nuoyis1024/lnmp:autobuild-arm64 .
+          docker push nuoyis1024/lnmp:autobuild-arm64
 
   create-manifest:
     runs-on: ubuntu-latest
@@ -45,8 +53,8 @@ jobs:
 
       - name: Create & Push Multi-arch Manifest
         run: |
-          docker manifest create nuoyis1024/nuoyis-lnmp:autobuild \
-            --amend nuoyis1024/nuoyis-lnmp:autobuild-amd64 \
-            --amend nuoyis1024/nuoyis-lnmp:autobuild-arm64
+          docker manifest create nuoyis1024/lnmp:autobuild \
+            --amend nuoyis1024/lnmp:autobuild-amd64 \
+            --amend nuoyis1024/lnmp:autobuild-arm64
 
-          docker manifest push nuoyis1024/nuoyis-lnmp:autobuild
+          docker manifest push nuoyis1024/lnmp:autobuild

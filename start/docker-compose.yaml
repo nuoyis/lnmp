@@ -13,21 +13,21 @@ services:
       - 3306:3306
     volumes:
       # nginx 配置文件
-      - /nuoyis-server/web/nginx/conf:/nuoyis-web/nginx/conf
+      - /nuoyis-server/web/nginx/conf:/web/nginx/conf
       # nginx 网站目录
-      - /nuoyis-server/web/nginx/webside:/nuoyis-web/nginx/webside
+      - /nuoyis-server/web/nginx/webside:/web/nginx/webside
       # nginx ssl
-      - /nuoyis-server/web/nginx/ssl:/nuoyis-web/nginx/ssl
+      - /nuoyis-server/web/nginx/ssl:/web/nginx/ssl
       # Log 目录
-      - /var/log/nuoyis-web:/nuoyis-web/logs
+      - /var/log/web:/web/logs
       # mariadb 数据与配置
       - /nuoyis-server/web/mariadb/init:/docker-entrypoint-initdb.d
       # MariaDB 数据目录
-      - /nuoyis-server/web/mariadb/server:/nuoyis-web/mariadb/data
+      - /nuoyis-server/web/mariadb/server:/web/mariadb/data
       # MariaDB 导入目录（自动导入）
-      - /nuoyis-server/web/mariadb/import:/nuoyis-web/mariadb/import
+      - /nuoyis-server/web/mariadb/import:/web/mariadb/import
       # MariaDB 配置
-      - /nuoyis-server/web/mariadb/config:/nuoyis-web/mariadb/config
+      - /nuoyis-server/web/mariadb/config:/web/mariadb/config
     environment:
       TIME_ZONE: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: ""

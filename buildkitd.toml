@@ -1,3 +1,0 @@
-[registry."docker.io"]
-  mirrors = ["hub.nastool.de","docker.1ms.run","docker.1panel.live","docker.1panel.top","hub-mirror.c.163.com","mirror.baidubce.com","dockerhub.icu","hub.rat.dev","docker.wanpeng.top","docker.mrxn.net","docker.anyhub.us.kg","dislabaiot.xyz","docker.fxxk.dedyn.io","docker-mirror.aigc2d.com","doublezonline.cloud","dockerproxy.com","mirror.iscas.ac.cn","docker66ccff.lovablewyh.eu.org","docker.m.daocloud.io"]
-  http = false

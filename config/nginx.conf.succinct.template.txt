@@ -4,10 +4,10 @@ server {
     include head.conf;
     server_name template;
     # SSL 配置
-    ssl_certificate /nuoyis-web/nginx/ssl/template.pem;
-    ssl_certificate_key /nuoyis-web/nginx/ssl/template.key;
+    ssl_certificate /web/nginx/ssl/template.pem;
+    ssl_certificate_key /web/nginx/ssl/template.key;
     # 文件目录以及index文件配置
-    root /nuoyis-web/nginx/webside/default;
+    root /web/nginx/webside/default;
     index index.html;
     # http跳转https
     if ($scheme = http) {
@@ -31,6 +31,6 @@ server {
        return 404;
     }       
     # 日志系统
-    access_log  /nuoyis-web/logs/nginx/template.log;
-    error_log  /nuoyis-web/logs/nginx/template.log;
+    access_log  /web/logs/nginx/template.log;
+    error_log  /web/logs/nginx/template.log;
 }
