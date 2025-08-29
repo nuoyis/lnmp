@@ -22,7 +22,7 @@ spec:
         runAsUser: 0
         runAsGroup: 0
       containers:
-        - name: nuoyis-lnmp-np
+        - name: nuoyis-lnmp
           image: nuoyis1024/nuoyis-lnmp:dev
           env:
             - name: MYSQL_ROOT_PASSWORD

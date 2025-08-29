@@ -4,12 +4,13 @@
 
 echo "Welcome use nuoyis's lnmp service"
 
+mkdir -p /web/nginx/webside/default/
+mkdir -p /web/logs/{nginx,php/{latest,stable},mariadb}
 # nginx/php 文件/服务检查
 # 默认HTML
 echo "check nginx service"
 if [ ! -f "/web/nginx/conf/default.conf" ]; then
   echo "default page is not found. then create new default page of html"
-  mkdir -p /web/nginx/webside/default/
   cp /web/nginx/server/template/index.html /web/nginx/webside/default/index.html
   cp /web/nginx/server/template/default.conf /web/nginx/conf/default.conf
 else
@@ -17,7 +18,6 @@ else
 fi
 cp /web/nginx/server/template/nginx.conf.full.template /web/nginx/conf/nginx.conf.full.template
 cp /web/nginx/server/template/nginx.conf.succinct.template /web/nginx/conf/nginx.conf.succinct.template
-mkdir -p /web/logs/{nginx,php/{latest,stable}}
 touch /web/logs/nginx/error.log
 touch /web/logs/php/latest/www-error.log
 touch /web/logs/php/stable/www-error.log
