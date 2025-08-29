@@ -18,6 +18,8 @@ permissions:
 jobs:
   tag-branch-release:
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
     steps:
       - name: Checkout repo (fetch all tags & branches)
         uses: actions/checkout@v4
@@ -25,18 +27,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
-
       - name: Setup git user
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
       - name: Get latest tag
         id: get_latest
         run: |
-          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
           echo "latest_tag=$latest" >> "$GITHUB_OUTPUT"
-
       - name: Compute new tag (patch++)
         id: bump
         run: |
@@ -49,33 +48,32 @@ jobs:
           patch=$((patch + 1))
           new_tag="$maj.$min.$patch"
           echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
-
       - name: Create tag and push
-        id: push_tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           new_tag="${{ steps.bump.outputs.new_tag }}"
           echo "Creating tag: $new_tag"
           git tag -a "$new_tag" -m "Release $new_tag"
           git push origin "refs/tags/$new_tag"
-
       - name: Create branch with same name (if not exists)
-        id: create_branch
         run: |
           new_tag="${{ steps.bump.outputs.new_tag }}"
-          # 检查远端是否已存在该分支
           if git ls-remote --heads origin "refs/heads/$new_tag" | grep -q "$new_tag"; then
             echo "Branch $new_tag already exists on origin, skipping creation."
-            echo "branch_created=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Creating branch $new_tag from origin/main"
-            # 确保 main 已经抓取
             git fetch origin main:refs/remotes/origin/main
             git checkout -b "$new_tag" "origin/main"
             git push origin "refs/heads/$new_tag"
-            echo "branch_created=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          release_name: Release ${{ steps.bump.outputs.new_tag }}
+          body: "自动发布 ${{ steps.bump.outputs.new_tag }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
