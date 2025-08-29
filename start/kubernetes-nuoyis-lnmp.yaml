@@ -23,7 +23,7 @@ spec:
         runAsGroup: 0
       containers:
         - name: nuoyis-lnmp
-          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/nuoyis-lnmp:latest
+          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:latest
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: ""
