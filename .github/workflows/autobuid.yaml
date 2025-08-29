@@ -28,6 +28,8 @@ jobs:
         run: |
           docker build --no-cache -t nuoyis1024/lnmp:autobuild-amd64 .
           docker push nuoyis1024/lnmp:autobuild-amd64
+          docker tag nuoyis1024/lnmp:autobuild-amd64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-amd64
+          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-amd64
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -43,6 +45,8 @@ jobs:
         run: |
           docker build --no-cache -t nuoyis1024/lnmp:autobuild-arm64 .
           docker push nuoyis1024/lnmp:autobuild-arm64
+          docker tag nuoyis1024/lnmp:autobuild-arm64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64
+          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64
 
   create-manifest:
     runs-on: ubuntu-latest
