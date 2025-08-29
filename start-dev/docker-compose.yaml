@@ -2,7 +2,7 @@ version: '3'
 services:
   nuoyis-lnmp:
     container_name: nuoyis-lnmp
-    image: nuoyis-lnmp:test
+    image: nuoyis1024/nuoyis-lnmp:dev
     networks: 
       nuoyis-lnmp-net:
         aliases:

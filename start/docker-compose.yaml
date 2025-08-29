@@ -1,7 +1,7 @@
 services:
   nuoyis-lnmp:
     container_name: nuoyis-lnmp
-    image: nuoyis1024/nuoyis-lnmp:latest
+    image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:latest
     networks: 
       nuoyis-lnmp-net:
         aliases:
