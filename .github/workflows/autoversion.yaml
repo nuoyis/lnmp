@@ -2,14 +2,12 @@ name: Update Versions JSON
 
 on:
   schedule:
-    - cron: '0 16 * * *'  # 每天 UTC 16 点，约等于北京时间 0 点
+    - cron: '0 16 * * *'
   workflow_dispatch:
-  push:
-    paths:
-      - 'versions.json'  # 也可触发自身 workflow
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   update-versions:

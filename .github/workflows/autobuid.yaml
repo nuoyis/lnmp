@@ -8,6 +8,7 @@ on:
   
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -70,6 +71,6 @@ jobs:
           docker manifest push nuoyis1024/lnmp:autobuild
 
           docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild \
-            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64 \
+            --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-amd64 \
             --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild-arm64
           docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:autobuild
