@@ -33,8 +33,9 @@ jobs:
       - name: Commit updated JSON if changed
         id: commit_changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "nuoyis-autobuild"
+          git config user.email "wkkjonlykang@vip.qq.com"
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/nuoyis/lnmp.git
           git add versions.json
           if git diff --cached --quiet; then
               echo "No version change detected, skipping commit."
