@@ -44,6 +44,11 @@ jobs:
               git commit -m "Update versions.json"
               git push
               echo "changed=true" >> $GITHUB_OUTPUT
+              curl -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: token ${{ secrets.PERSONAL_TOKEN }}" \
+              https://api.github.com/repos/nuoyis/lnmp/dispatches \
+              -d '{"event_type":"autobuild"}'
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
