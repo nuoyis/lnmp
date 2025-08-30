@@ -2,9 +2,8 @@ name: Autobuild Docker Images
 
 on:
   workflow_dispatch:    # 可手动触发
-  push:
-    paths:
-      - 'versions.json' # 只在 versions.json 改动时触发
+  repository_dispatch:
+    types: [autobuild]
   
 permissions:
   contents: write
