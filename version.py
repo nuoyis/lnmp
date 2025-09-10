@@ -17,7 +17,8 @@ if GITHUB_TOKEN:
 repos = {
     "nginx": "nginx/nginx",
     "php": "php/php-src",
-    "mariadb": "MariaDB/server"
+    "mariadb": "MariaDB/server",
+    "kubernetes": "kubernetes/kubernetes"
 }
 
 def fetch_latest_version(repo, latest=True):
