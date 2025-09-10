@@ -50,7 +50,7 @@ def main():
     versions["nginx"] = fetch_latest_version(repos["nginx"], latest=True)
     versions["php"] = fetch_latest_version(repos["php"], latest=False)
     versions["mariadb"] = fetch_latest_version(repos["mariadb"], latest=False)
-    versions["kubernetes"] = fetch_latest_version(repos["kubernetes"], latest=False)
+    versions["kubernetes"] = fetch_latest_version(repos["kubernetes"], latest=True)
     
     save_versions(versions)
     print(json.dumps({"versions": versions}, indent=4))
