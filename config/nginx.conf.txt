@@ -52,7 +52,7 @@ http {
         server_name _;
 
         # 用户自定义页面设置
-        include /web/nginx/conf/default.conf;
+        include /web/nginx/conf/default.conf.init;
     }
 
     # 其他相关配置
