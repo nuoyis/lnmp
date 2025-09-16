@@ -297,7 +297,7 @@ ADD config/stable-php.ini.txt /web/php/stable/etc/php.ini
 ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 ADD config/supervisord.conf.txt /web/supervisord/supervisord.conf
 ADD config/index.html /web/nginx/server/template/index.html
-ADD config/default.conf.txt /web/nginx/server/template/default.conf
+ADD config/default.conf.txt /web/nginx/server/template/default.conf.init
 ADD config/nginx.conf.full.template.txt /web/nginx/server/template/nginx.conf.full.template
 ADD config/nginx.conf.succinct.template.txt /web/nginx/server/template/nginx.conf.succinct.template
 ADD config/start.sh.txt /web/start.sh
