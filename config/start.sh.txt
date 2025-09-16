@@ -9,10 +9,10 @@ mkdir -p /web/logs/{nginx,php/{latest,stable},mariadb}
 # nginx/php 文件/服务检查
 # 默认HTML
 echo "check nginx service"
-if [ ! -f "/web/nginx/conf/default.conf" ]; then
+if [ ! -f "/web/nginx/conf/default.conf.init" ]; then
   echo "default page is not found. then create new default page of html"
   cp /web/nginx/server/template/index.html /web/nginx/webside/default/index.html
-  cp /web/nginx/server/template/default.conf /web/nginx/conf/default.conf
+  cp /web/nginx/server/template/default.conf.init /web/nginx/conf/default.conf.init
 else
   echo "default page is found. then use default page of html"
 fi
