@@ -20,8 +20,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  dockerfile_synthesis:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build dockerfile
+        run: |
+          cat dockerfile_lnmp_builder_main     dockerfile_lnmp_build_so_lnmp     dockerfile_lnmp_builder_lnmp_shell     dockerfile_lnmp_builder_end     dockerfile_lnmp_build_main     dockerfile_lnmp_build_end > Dockerfile
+          ll
+
   build-amd64:
     runs-on: ubuntu-24.04
+    needs: [dockerfile_synthesis]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to aliyunHub
@@ -37,17 +47,11 @@ jobs:
           docker tag nuoyis1024/lnmp:dev-amd64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-amd64
           docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-amd64
 
-  dockerfile_synthesis:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build dockerfile
-        run: |
-          cat dockerfile_lnmp_builder_main     dockerfile_lnmp_build_so_lnmp     dockerfile_lnmp_builder_lnmp_shell     dockerfile_lnmp_builder_end     dockerfile_lnmp_build_main     dockerfile_lnmp_build_end > Dockerfile
-          pwd
+
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
+    needs: [dockerfile_synthesis]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to aliyunHub
