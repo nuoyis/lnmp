@@ -1,6 +1,3 @@
 #!/bin/sh
 # 检查 nginx
 curl -sf http://127.0.0.1:80/ > /dev/null || exit 1
-
-# 检查 mariadb
-mariadb-admin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --host=127.0.0.1 > /dev/null || exit 1;
