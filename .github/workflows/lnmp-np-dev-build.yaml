@@ -66,6 +66,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: download
+        uses: actions/download-artifact@v4
+        with:
+          name: Dockerfile
       - name: Build arm64
         run: |
           docker build --no-cache -t nuoyis1024/lnmp-np:dev-arm64 .
