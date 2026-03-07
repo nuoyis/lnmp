@@ -4,3 +4,5 @@ RUN mkdir -p /runner-libs /otherlibs && \
         ldd $bin | grep "=> /" | awk '{print $3}' | sort -u | xargs -r -I{} cp --parents {} /runner-libs; \
     done && \
     cp /lib64/ld-linux-*.so.* /otherlibs || true
+
+# 配置文件添加

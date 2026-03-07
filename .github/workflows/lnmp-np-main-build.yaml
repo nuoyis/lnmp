@@ -81,7 +81,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build dockerfile
         run: |
-          cat dockerfile_lnmp_builder_main     dockerfile_lnmp_build_so_np     dockerfile_lnmp_builder_np_shell     dockerfile_lnmp_builder_end     dockerfile_lnmp_build_main     dockerfile_lnmp_build_end > Dockerfile
+          cat dockerfile_lnmp_builder_main > Dockerfile
+          for i in dockerfile_lnmp_build_so_np dockerfile_lnmp_builder_np_shell dockerfile_lnmp_builder_end dockerfile_lnmp_build_main dockerfile_lnmp_build_end;
+            do
+              printf '' >> Dockerfile; cat $i >> Dockerfile;
+            done
       - name: upload
         uses: actions/upload-artifact@v4
         with:

@@ -1,4 +1,3 @@
-# 配置文件添加
 # nginx
 ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
 ADD config/ssl/default.pem /web/nginx/server/conf/ssl/default.pem
