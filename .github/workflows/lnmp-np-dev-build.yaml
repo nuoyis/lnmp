@@ -27,6 +27,11 @@ jobs:
       - name: Build dockerfile
         run: |
           cat dockerfile_lnmp_builder_main     dockerfile_lnmp_build_so_np     dockerfile_lnmp_builder_np_shell     dockerfile_lnmp_builder_end     dockerfile_lnmp_build_main     dockerfile_lnmp_build_end > Dockerfile
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dockerfile
+          path: Dockerfile
 
   build-amd64:
     runs-on: ubuntu-24.04
@@ -39,6 +44,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: download
+        uses: actions/download-artifact@v4
+        with:
+          name: Dockerfile
       - name: Build amd64
         run: |
           docker build --no-cache -t nuoyis1024/lnmp-np:dev-amd64 .
