@@ -1,3 +1,4 @@
 # docker-start-shell
+ADD lnmp/config/supervisord.conf.txt /web/supervisord/supervisord.conf
 ADD lnmp/config/start.sh.txt /web/start.sh
 ADD lnmp/config/healthcheck.sh.txt /web/healthcheck.sh
