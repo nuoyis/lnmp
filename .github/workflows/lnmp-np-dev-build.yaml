@@ -30,6 +30,7 @@ jobs:
 
   build-amd64:
     runs-on: ubuntu-24.04
+    needs: [dockerfile_synthesis]    
     steps:
       - uses: actions/checkout@v4
       - name: Log in to aliyunHub
@@ -47,6 +48,7 @@ jobs:
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
+    needs: [dockerfile_synthesis]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to aliyunHub
