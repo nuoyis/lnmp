@@ -9,11 +9,11 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
     rm -rf /var/lib/apt/lists/*
 
 # Fetch versions from upstream (with sane fallbacks) and write JSON
-RUN NGINX_VERSION=$(curl -s "http://lnmp-versions.nuoyis.net/versions.json" | jq -r '.versions.nginx');\
-    PHP_LATEST_VERSION=$(curl -s "http://lnmp-versions.nuoyis.net/versions.json" | jq -r '.versions.php');\
-    MARIADB_LATEST_VERSION=$(curl -s "http://lnmp-versions.nuoyis.net/versions.json" | jq -r '.versions.mariadb');\
+RUN NGINX_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.nginx');\
+    PHP_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.php');\
+    MARIADB_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.mariadb');\
     NGINX_VERSION=${NGINX_VERSION:-"1.29.1"};\
-    PHP_LATEST_VERSION=${PHP_LATEST_VERSION:-"8.4.11"};\
+    PHP_LATEST_VERSION=${PHP_LATEST_VERSION:-"8.5.3"};\
     echo "ENV NGINX_VERSION=$NGINX_VERSION" >> /tmp/version.env;\
     echo "ENV PHP_LATEST_VERSION=$PHP_LATEST_VERSION" >> /tmp/version.env;\
     echo "ENV MARIADB_LATEST_VERSION=$MARIADB_LATEST_VERSION" >> /tmp/version.env;\
