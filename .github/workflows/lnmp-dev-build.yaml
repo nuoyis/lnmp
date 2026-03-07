@@ -1,4 +1,4 @@
-name: Build Multi-Arch Image (dev)
+name: lnmp-Build Multi-Arch Image (dev)
 
 on:
   push:

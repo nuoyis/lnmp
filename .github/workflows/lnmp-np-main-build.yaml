@@ -1,4 +1,4 @@
-name: Auto Tag, Branch and Release
+name: lnmp-np-Auto Tag, Branch and Release
 
 on:
   push:
