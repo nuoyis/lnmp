@@ -1,0 +1,3 @@
+# docker-start-shell
+ADD lnmp/config/start.sh.txt /web/start.sh
+ADD lnmp/config/healthcheck.sh.txt /web/healthcheck.sh

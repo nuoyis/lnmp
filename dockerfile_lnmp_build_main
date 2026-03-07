@@ -1,0 +1,20 @@
+# 创建最终镜像
+FROM docker.io/debian:13-slim AS runner
+
+# 设置默认 shell
+SHELL ["/bin/bash", "-c"]
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 复制 so依赖
+COPY --from=builder /runner-libs /runner-libs
+COPY --from=builder /otherlibs /lib64
+
+# 复制 web文件夹
+COPY --from=builder /web /web
+
+# 环境变量
+ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
+

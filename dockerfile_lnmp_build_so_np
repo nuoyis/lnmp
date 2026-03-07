@@ -1,0 +1,6 @@
+# so环境获取
+RUN mkdir -p /runner-libs /otherlibs && \
+    for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm; do \
+        ldd $bin | grep "=> /" | awk '{print $3}' | sort -u | xargs -r -I{} cp --parents {} /runner-libs; \
+    done && \
+    cp /lib64/ld-linux-*.so.* /otherlibs || true
