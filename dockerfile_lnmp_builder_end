@@ -1,0 +1,23 @@
+# nginx
+ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
+ADD config/ssl/default.pem /web/nginx/server/conf/ssl/default.pem
+ADD config/ssl/default.key /web/nginx/server/conf/ssl/default.key
+ADD config/start-php-latest.conf.txt /web/nginx/server/conf/start-php-latest.conf
+ADD config/path.conf.txt /web/nginx/server/conf/path.conf
+ADD config/start-php-stable.conf.txt /web/nginx/server/conf/start-php-stable.conf
+ADD config/head.conf.txt /web/nginx/server/conf/head.conf
+ADD config/index.html /web/nginx/server/template/index.html
+ADD config/default.conf.txt /web/nginx/server/template/default.conf.init
+ADD config/nginx.conf.full.template.txt /web/nginx/server/template/nginx.conf.full.template
+ADD config/nginx.conf.succinct.template.txt /web/nginx/server/template/nginx.conf.succinct.template
+# php
+ADD config/latest-php.ini.txt /web/php/latest/etc/php.ini
+ADD config/fpm-latest.conf.txt /web/php/latest/etc/php-fpm.d/fpm.conf
+ADD config/stable-php.ini.txt /web/php/stable/etc/php.ini
+ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
+
+# 防止windows字符造成无法读取
+RUN find "/web" -type f -exec dos2unix {} \;
+
+# 删除不需要的环境
+RUN rm -rf /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2
