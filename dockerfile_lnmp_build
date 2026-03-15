@@ -19,28 +19,29 @@ COPY --from=builder /web /web
 ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
 
 # 必要的初始化
-RUN if [ -d /runner-libs ]; then \
-      find /runner-libs -type d | sort -u \
-        > /etc/ld.so.conf.d/nuoyis-runner-libs.conf; \
-      ldconfig; \
-    fi;\
-    useradd -u 2233 -m -s /sbin/nologin web;\
-    mkdir -p /run/{mariadb,php/{stable,latest}};\
-    chown -R web:web /web;\
-    chown -R web:web /run;\
-    chmod -R 775 /run;\
-    chmod -R 775 /web;\
-    chmod g+s /web;\
-    chmod +x /web/start.sh;\
-    chmod +x /web/healthcheck.sh;\
-    mkdir /docker-entrypoint-initdb.d;\
-    sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
-    apt install -y supervisor curl libncurses6;\
-    apt clean && rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info;\
-    ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest;\
-    ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
+RUN <<'EOF' 
+if [ -d /runner-libs ]; then
+  find /runner-libs -type d | sort -u > /etc/ld.so.conf.d/nuoyis-runner-libs.conf
+  ldconfig
+fi
+useradd -u 2233 -m -s /sbin/nologin web
+mkdir -p /run/{mariadb,php/{stable,latest}}
+chown -R web:web /web
+chown -R web:web /run
+chmod -R 775 /run
+chmod -R 775 /web
+chmod g+s /web
+chmod +x /web/start.sh
+chmod +x /web/healthcheck.sh
+mkdir /docker-entrypoint-initdb.d
+sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates
+apt install -y supervisor curl libncurses6
+apt clean && rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
+ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
+ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
+EOF
 
 # 暴露端口
 EXPOSE 80 443

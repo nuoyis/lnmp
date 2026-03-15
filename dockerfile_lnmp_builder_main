@@ -59,35 +59,35 @@ sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      "'$NGINX_VERS
 sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h
 sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filter_module.c
 ./configure
-     --prefix=/web/nginx/server
-     --with-openssl=/build/openssl-3.5.2
-     --user=web --group=web
-     --with-compat
-     --with-file-aio
-     --with-threads
-     --with-http_addition_module
-     --with-http_auth_request_module
-     --with-http_dav_module
-     --with-http_flv_module
-     --with-http_gunzip_module
-     --with-http_gzip_static_module
-     --with-http_mp4_module
-     --with-http_random_index_module
-     --with-http_realip_module
-     --with-http_secure_link_module
-     --with-http_slice_module
-     --with-http_ssl_module
-     --with-http_stub_status_module
-     --with-http_sub_module
-     --with-http_v2_module
-     --with-http_v3_module
-     --with-mail
-     --with-mail_ssl_module
-     --with-stream
-     --with-stream_realip_module
-     --with-stream_ssl_module
-     --with-stream_ssl_preread_module
-     --with-cc-opt="-static"
+     --prefix=/web/nginx/server \
+     --with-openssl=/build/openssl-3.5.2 \
+     --user=web --group=web \
+     --with-compat \
+     --with-file-aio \
+     --with-threads \
+     --with-http_addition_module \
+     --with-http_auth_request_module \
+     --with-http_dav_module \
+     --with-http_flv_module \
+     --with-http_gunzip_module \
+     --with-http_gzip_static_module \
+     --with-http_mp4_module \
+     --with-http_random_index_module \
+     --with-http_realip_module \
+     --with-http_secure_link_module \
+     --with-http_slice_module \
+     --with-http_ssl_module \
+     --with-http_stub_status_module \
+     --with-http_sub_module \
+     --with-http_v2_module \
+     --with-http_v3_module \
+     --with-mail \
+     --with-mail_ssl_module \
+     --with-stream \
+     --with-stream_realip_module \
+     --with-stream_ssl_module \
+     --with-stream_ssl_preread_module \
+     --with-cc-opt="-static" \
      --with-ld-opt="-static"
 make -j$(nproc)
 make install
@@ -152,46 +152,46 @@ for phpversion in 7.4.33 $PHP_LATEST_VERSION; do
     export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib"
     export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
     cd /build/php-$phpversion
-    ./configure --prefix=/web/php/$buildtype/
-        --with-config-file-path=/web/php/$buildtype/etc/
-        --with-freetype
-        --enable-gd
-        --with-jpeg
-        --with-gettext
-        --with-libdir=lib64
-        --with-libxml
-        --with-mysqli
-        --with-pdo-mysql
-        --with-pdo-sqlite
-        --with-pear
-        --enable-sockets
-        --with-mhash
-        --with-ldap-sasl
-        --with-xsl
-        --with-zlib
-        --with-zip
-        --with-bz2
-        --with-iconv
-        --enable-fpm
-        --enable-pdo
-        --enable-bcmath
-        --enable-mbregex
-        --enable-mbstring
-        --enable-pcntl
-        --enable-shmop
-        --enable-soap
-        --enable-ftp
-        --with-xpm
-        --enable-xml
-        --enable-sysvsem
-        --enable-cli
-        --enable-intl
-        --enable-calendar
-        --enable-static
-        --enable-ctype
-        --enable-mysqlnd
-        --enable-session
-        --enable-php-redis
+    ./configure --prefix=/web/php/$buildtype/  \
+        --with-config-file-path=/web/php/$buildtype/etc/ \
+        --with-freetype \
+        --enable-gd \
+        --with-jpeg \
+        --with-gettext \
+        --with-libdir=lib64 \
+        --with-libxml \
+        --with-mysqli \
+        --with-pdo-mysql \
+        --with-pdo-sqlite \
+        --with-pear \
+        --enable-sockets \
+        --with-mhash \
+        --with-ldap-sasl \
+        --with-xsl \
+        --with-zlib \
+        --with-zip \
+        --with-bz2 \
+        --with-iconv \
+        --enable-fpm \
+        --enable-pdo \
+        --enable-bcmath \
+        --enable-mbregex \
+        --enable-mbstring \
+        --enable-pcntl \
+        --enable-shmop \
+        --enable-soap \
+        --enable-ftp \
+        --with-xpm \
+        --enable-xml \
+        --enable-sysvsem \
+        --enable-cli \
+        --enable-intl \
+        --enable-calendar \
+        --enable-static \
+        --enable-ctype \
+        --enable-mysqlnd \
+        --enable-session \
+        --enable-php-redis \
         $PHPCONFIG
     make -j$(nproc)
     make install
