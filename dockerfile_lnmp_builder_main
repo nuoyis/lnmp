@@ -4,7 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false upgrade -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y curl jq ca-certificates;\
     rm -rf /var/lib/apt/lists/*
 
@@ -40,7 +39,6 @@ ARG TARGETVARIANT
 # 更换软件源，并安装基础依赖
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false upgrade -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
     apt install -y \
         dos2unix \
@@ -249,4 +247,5 @@ RUN export $(cat /tmp/version.env); \
         make install;\
     done;\
     mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf &&\
-    mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
+    mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf; \
+    rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man
