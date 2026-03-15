@@ -31,4 +31,4 @@ RUN export $(cat /tmp/version.env); \
         -DMYSQL_UNIX_ADDR=/run/mariadb/mariadb.sock && \
     make -j$(nproc) && make install && \
     strip /web/mariadb/bin/* /web/mariadb/lib/*.so* || true; \
-    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /build/mariadb-$MARIADB_LATEST_VERSION
+    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /build/*;

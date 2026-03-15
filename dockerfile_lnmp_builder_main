@@ -127,7 +127,7 @@ RUN export $(cat /tmp/version.env); \
          --with-ld-opt="-static"; \
     make -j$(nproc); \
     make install; \
-    rm -rf /build/nginx-$NGINX_VERSION;
+    rm -rf /build/*;
 
 
 # PHP综合构建
@@ -154,9 +154,12 @@ RUN export $(cat /tmp/version.env); \
     else \
         ./config $CONFIGURE_OPTS;\
     fi;\
-    make -j$(nproc) && make install; \
+    make -j$(nproc); \
+    make install; \
     cd /build/curl-7.87.0; \
-    ./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static; make -j$(nproc) && make install \
+    ./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static;
+    make -j$(nproc); \
+    make install; \
     cd /build/openssl-3.5.2; \
     CONFIGURE_OPTS="--prefix=/web/openssl-3.5.2 --openssldir=/web/openssl-3.5.2 no-shared no-dso no-tests";\
     if [ "$TARGETARCH" = "arm64" ]; then \
@@ -172,7 +175,7 @@ RUN export $(cat /tmp/version.env); \
             export buildtype=stable;\
             export CURL_PREFIX="/web/curl-openssl";\
             export OPENSSL_PREFIX_PATH="/web/openssl-1.1.1";\
-            PHPCONFIG="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH}";\
+            PHPCONFIG="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH} --enable-opcache";\
             export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include";\
             export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}";\
         else \
@@ -210,7 +213,6 @@ RUN export $(cat /tmp/version.env); \
             --enable-bcmath \
             --enable-mbregex \
             --enable-mbstring \
-            --enable-opcache \
             --enable-pcntl \
             --enable-shmop \
             --enable-soap \
@@ -225,12 +227,11 @@ RUN export $(cat /tmp/version.env); \
             --enable-ctype \
             --enable-mysqlnd \
             --enable-session \
-            --enable-redis;\
+            --enable-php-redis;\
         make -j$(nproc);\
         make install;\
-        rm -rf /build/php-$phpversion; \
     done;\
     mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf; \
     mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf; \
-    rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2; \
+    rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2 /build/*; \
 
