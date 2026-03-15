@@ -1,34 +1,36 @@
 # mariadb 编译
 WORKDIR /build
-RUN export $(cat /tmp/version.env); \
-    wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz; \
-    tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz; \
-    cd mariadb-$MARIADB_LATEST_VERSION; \
-    cmake . \
-        -DCMAKE_INSTALL_PREFIX=/web/mariadb \
-        -DMYSQL_DATADIR=/web/mariadb/data \
-        -DSYSCONFDIR=/web/mariadb/config \
-        -DWITH_INNOBASE_STORAGE_ENGINE=1 \
-        -DWITH_ARCHIVE_STORAGE_ENGINE=1 \
-        -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
-        -DWITHOUT_TOKUDB=1 \
-        -DWITHOUT_MROONGA_STORAGE_ENGINE=1 \
-        -DPLUGIN_SPHINX=NO \
-        -DPLUGIN_FEEDBACK=NO \
-        -DWITH_READLINE=1 \
-        -DWITH_SSL=system \
-        -DWITH_ZLIB=system \
-        -DWITH_LIBWRAP=0 \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DWITH_DEBUG=0 \
-        -DWITH_UNIT_TESTS=OFF \
-        -DWITH_BENCHMARK=OFF \
-        -DWITH_WSREP=OFF \
-        -DENABLE_DTRACE=OFF \
-        -DDEFAULT_CHARSET=utf8mb4 \
-        -DDEFAULT_COLLATION=utf8mb4_general_ci \
-        -DMYSQL_USER=web \
-        -DMYSQL_UNIX_ADDR=/run/mariadb/mariadb.sock && \
-    make -j$(nproc) && make install && \
-    strip /web/mariadb/bin/* /web/mariadb/lib/*.so* || true; \
-    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /build/*;
+RUN <<'EOF'
+export $(cat /tmp/version.env)
+wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz
+tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz
+cd mariadb-$MARIADB_LATEST_VERSION
+cmake .
+    -DCMAKE_INSTALL_PREFIX=/web/mariadb
+    -DMYSQL_DATADIR=/web/mariadb/data
+    -DSYSCONFDIR=/web/mariadb/config
+    -DWITH_INNOBASE_STORAGE_ENGINE=1
+    -DWITH_ARCHIVE_STORAGE_ENGINE=1
+    -DWITH_BLACKHOLE_STORAGE_ENGINE=1
+    -DWITHOUT_TOKUDB=1
+    -DWITHOUT_MROONGA_STORAGE_ENGINE=1
+    -DPLUGIN_SPHINX=NO
+    -DPLUGIN_FEEDBACK=NO
+    -DWITH_READLINE=1
+    -DWITH_SSL=system
+    -DWITH_ZLIB=system
+    -DWITH_LIBWRAP=0
+    -DCMAKE_BUILD_TYPE=Release
+    -DWITH_DEBUG=0
+    -DWITH_UNIT_TESTS=OFF
+    -DWITH_BENCHMARK=OFF
+    -DWITH_WSREP=OFF
+    -DENABLE_DTRACE=OFF
+    -DDEFAULT_CHARSET=utf8mb4
+    -DDEFAULT_COLLATION=utf8mb4_general_ci
+    -DMYSQL_USER=web
+    -DMYSQL_UNIX_ADDR=/run/mariadb/mariadb.sock &&
+make -j$(nproc) && make install &&
+strip /web/mariadb/bin/* /web/mariadb/lib/*.so* || true
+rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /build/*
+EOF
