@@ -16,6 +16,7 @@ COPY --from=builder /otherlibs /lib64
 COPY --from=builder /web/nginx /web/nginx
 COPY --from=builder /web/php /web/php
 COPY --from=builder /web/mariadb /web/mariadb
+COPY --from=builder /web/start.sh /web/start.sh
 
 # 环境变量
 ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
@@ -40,8 +41,8 @@ RUN if [ -d /runner-libs ]; then \
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
     apt install -y supervisor curl libncurses6;\
-    apt clean && rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info && \
-    ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest && \
+    apt clean && rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info;\
+    ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest;\
     ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
 
 # 暴露端口

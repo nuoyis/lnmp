@@ -85,29 +85,11 @@ RUN export $(cat /tmp/version.env); \
     /var/run/php/{stable,latest} \
     /web/{supervisord,mariadb/{bin,data,config,logs}}
 
-# 下载源码
-COPY software/php-7.4.33.tar.gz /build/php-7.4.33.tar.gz
-COPY software/phpredis-6.1.0.tar.gz /build/phpredis-6.1.0.tar.gz
-COPY software/openssl-1.1.1w.tar.gz /build/openssl-1.1.1w.tar.gz
-COPY software/curl-7.87.0.tar.gz /build/curl-7.87.0.tar.gz
-WORKDIR /build
-RUN export $(cat /tmp/version.env); \
-    wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz && \
-    wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz && \
-    wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz && \
-    wget https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz && \
-    tar -xzf nginx-$NGINX_VERSION.tar.gz && \
-    tar -xzf php-$PHP_LATEST_VERSION.tar.gz && \
-    tar -xzf php-7.4.33.tar.gz && \
-    tar -xzf phpredis-6.1.0.tar.gz && \
-    tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz && \
-    tar -xzf openssl-1.1.1w.tar.gz && \
-    tar -xzf curl-7.87.0.tar.gz && \
-    tar -xzf openssl-3.5.2.tar.gz
-
 # Nginx编译
 WORKDIR /build
 RUN export $(cat /tmp/version.env); \
+    wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz; \
+    tar -xzf nginx-$NGINX_VERSION.tar.gz; \
     cd nginx-$NGINX_VERSION; \
     sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      "'$NGINX_VERSION'"/g' ./src/core/nginx.h; \
     sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h; \
@@ -144,34 +126,38 @@ RUN export $(cat /tmp/version.env); \
          --with-cc-opt="-static" \
          --with-ld-opt="-static"; \
     make -j$(nproc); \
-    make install
+    make install; \
+    rm -rf /build/nginx-$NGINX_VERSION;
 
-# 复制 php Redis 源码
+
+# PHP综合构建
+COPY software/php-7.4.33.tar.gz /build/php-7.4.33.tar.gz
+COPY software/phpredis-6.1.0.tar.gz /build/phpredis-6.1.0.tar.gz
+COPY software/openssl-1.1.1w.tar.gz /build/openssl-1.1.1w.tar.gz
+COPY software/curl-7.87.0.tar.gz /build/curl-7.87.0.tar.gz
 WORKDIR /build
 RUN export $(cat /tmp/version.env); \
-    cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis && \
-    cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
-
-# php stable 版本 openssl 编译
-WORKDIR /build/openssl-1.1.1w
-RUN export $(cat /tmp/version.env); \
+    wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz; \
+    wget https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz; \
+    tar -xzf php-$PHP_LATEST_VERSION.tar.gz; \
+    tar -xzf php-7.4.33.tar.gz; \
+    tar -xzf phpredis-6.1.0.tar.gz; \
+    tar -xzf openssl-1.1.1w.tar.gz; \
+    tar -xzf curl-7.87.0.tar.gz; \
+    tar -xzf openssl-3.5.2.tar.gz; \
+    cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis; \
+    cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis; \
+    cd /build/curl-7.87.0; \
     CONFIGURE_OPTS="--prefix=/web/openssl-1.1.1 --openssldir=/web/openssl-1.1.1 no-shared no-dso no-tests";\
     if [ "$TARGETARCH" = "arm64" ]; then \
         ./Configure linux-aarch64 $CONFIGURE_OPTS;\
     else \
         ./config $CONFIGURE_OPTS;\
     fi;\
-    make -j$(nproc);\
-    make install
-
-# php stable 版本 curl 编译
-WORKDIR /build/curl-7.87.0
-RUN export $(cat /tmp/version.env); \
-    ./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static && make -j$(nproc) && make install
-
-# php latest 版本 openssl 编译
-WORKDIR /build/openssl-3.5.2
-RUN export $(cat /tmp/version.env); \
+    make -j$(nproc) && make install; \
+    cd /build/curl-7.87.0; \
+    ./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static; make -j$(nproc) && make install \
+    cd /build/openssl-3.5.2; \
     CONFIGURE_OPTS="--prefix=/web/openssl-3.5.2 --openssldir=/web/openssl-3.5.2 no-shared no-dso no-tests";\
     if [ "$TARGETARCH" = "arm64" ]; then \
         ./Configure linux-aarch64 $CONFIGURE_OPTS;\
@@ -179,10 +165,7 @@ RUN export $(cat /tmp/version.env); \
         ./config $CONFIGURE_OPTS;\
     fi;\
     make -j$(nproc);\
-    make install
-
-# php 编译
-RUN export $(cat /tmp/version.env); \
+    make install; \
     for phpversion in 7.4.33 $PHP_LATEST_VERSION; do \
         if [ "$phpversion" == "7.4.33" ]; then \
             export CXXFLAGS="-std=c++17";\
@@ -245,7 +228,9 @@ RUN export $(cat /tmp/version.env); \
             --enable-redis;\
         make -j$(nproc);\
         make install;\
+        rm -rf /build/php-$phpversion; \
     done;\
-    mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf &&\
+    mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf; \
     mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf; \
-    rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man
+    rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2; \
+

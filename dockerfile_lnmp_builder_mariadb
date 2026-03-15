@@ -1,6 +1,8 @@
 # mariadb 编译
 WORKDIR /build
 RUN export $(cat /tmp/version.env); \
+    wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz; \
+    tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz; \
     cd mariadb-$MARIADB_LATEST_VERSION; \
     cmake . \
         -DCMAKE_INSTALL_PREFIX=/web/mariadb \
@@ -29,4 +31,4 @@ RUN export $(cat /tmp/version.env); \
         -DMYSQL_UNIX_ADDR=/run/mariadb/mariadb.sock && \
     make -j$(nproc) && make install && \
     strip /web/mariadb/bin/* /web/mariadb/lib/*.so* || true; \
-    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs
+    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /build/mariadb-$MARIADB_LATEST_VERSION

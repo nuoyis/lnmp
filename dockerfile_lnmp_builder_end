@@ -19,5 +19,4 @@ ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 # 防止windows字符造成无法读取
 RUN find "/web" -type f -exec dos2unix {} \;
 
-# 删除不需要的环境
-RUN rm -rf /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2
+RUN rm -rf /build
