@@ -45,19 +45,13 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
     apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev
 
 # 目录初始化
-RUN <<'EOF'
-export $(cat /tmp/version.env)
-mkdir -p /build/php-$PHP_LATEST_VERSION/ext/php-redis
-/build/php-7.4.33/ext/php-redis
-/web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}}
-/var/run/php/{stable,latest}
-/web/{supervisord,mariadb/{bin,data,config,logs}}
-EOF
+RUN export $(cat /tmp/version.env); \
+mkdir -p /build/php-$PHP_LATEST_VERSION/ext/php-redis /build/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
 
 # Nginx编译
 WORKDIR /build
 RUN <<'EOF' 
-export $(cat /tmp/version.env)
+export $(cat /tmp/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
 tar -xzf nginx-$NGINX_VERSION.tar.gz
 cd nginx-$NGINX_VERSION
@@ -107,7 +101,7 @@ COPY software/openssl-1.1.1w.tar.gz /build/openssl-1.1.1w.tar.gz
 COPY software/curl-7.87.0.tar.gz /build/curl-7.87.0.tar.gz
 WORKDIR /build
 RUN <<'EOF'
-export $(cat /tmp/version.env)
+export $(cat /tmp/version.env);
 wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
 wget https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
 tar -xzf php-$PHP_LATEST_VERSION.tar.gz
