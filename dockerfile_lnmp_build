@@ -19,7 +19,7 @@ COPY --from=builder /web /web
 ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
 
 # 必要的初始化
-RUN <<'EOF' 
+RUN <<EOF
 if [ -d /runner-libs ]; then
   find /runner-libs -type d | sort -u > /etc/ld.so.conf.d/nuoyis-runner-libs.conf
   ldconfig

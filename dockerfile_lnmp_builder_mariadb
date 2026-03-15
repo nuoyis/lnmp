@@ -1,6 +1,6 @@
 # mariadb 编译
 WORKDIR /build
-RUN <<'EOF'
+RUN <<EOF
 export $(cat /tmp/version.env)
 wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz
 tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz

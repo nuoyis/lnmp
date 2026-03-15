@@ -8,7 +8,7 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
     rm -rf /var/lib/apt/lists/*
 
 # Fetch versions from upstream (with sane fallbacks) and write JSON
-RUN <<'EOF'
+RUN <<EOF
 NGINX_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.nginx')
 PHP_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.php')
 MARIADB_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.mariadb')
@@ -50,7 +50,7 @@ mkdir -p /build/php-$PHP_LATEST_VERSION/ext/php-redis /build/php-7.4.33/ext/php-
 
 # Nginx编译
 WORKDIR /build
-RUN <<'EOF' 
+RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
 tar -xzf nginx-$NGINX_VERSION.tar.gz
@@ -100,7 +100,7 @@ COPY software/phpredis-6.1.0.tar.gz /build/phpredis-6.1.0.tar.gz
 COPY software/openssl-1.1.1w.tar.gz /build/openssl-1.1.1w.tar.gz
 COPY software/curl-7.87.0.tar.gz /build/curl-7.87.0.tar.gz
 WORKDIR /build
-RUN <<'EOF'
+RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
 wget https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
