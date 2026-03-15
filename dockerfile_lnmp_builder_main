@@ -83,7 +83,7 @@ RUN export $(cat /tmp/version.env); \
     /build/php-7.4.33/ext/php-redis \
     /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} \
     /var/run/php/{stable,latest} \
-    /web/{supervisord,mariadb/{data,config,logs}}
+    /web/{supervisord,mariadb/{bin,data,config,logs}}
 
 # 下载源码
 COPY software/php-7.4.33.tar.gz /build/php-7.4.33.tar.gz
