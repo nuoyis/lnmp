@@ -147,7 +147,7 @@ RUN export $(cat /tmp/version.env); \
     tar -xzf openssl-3.5.2.tar.gz; \
     cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis; \
     cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis; \
-    cd /build/curl-7.87.0; \
+    cd /build/openssl-1.1.1w; \
     CONFIGURE_OPTS="--prefix=/web/openssl-1.1.1 --openssldir=/web/openssl-1.1.1 no-shared no-dso no-tests";\
     if [ "$TARGETARCH" = "arm64" ]; then \
         ./Configure linux-aarch64 $CONFIGURE_OPTS;\
