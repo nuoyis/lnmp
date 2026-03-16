@@ -9,7 +9,6 @@ ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 复制 so依赖
-COPY --from=builder /lib64 /lib64
 COPY --from=builder /lib /lib
 
 # 复制 web文件夹
