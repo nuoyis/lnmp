@@ -48,11 +48,13 @@ RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/s
 RUN export $(cat /tmp/version.env); \
 mkdir -p /build/php-$PHP_LATEST_VERSION/ext/php-redis /build/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
 
+COPY software/openssl-3.5.5.tar.gz /build/openssl-3.5.5.tar.gz
 # Nginx编译
 WORKDIR /build
 RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
+tar -xzf openssl-3.5.5.tar.gz
 tar -xzf nginx-$NGINX_VERSION.tar.gz
 cd nginx-$NGINX_VERSION
 sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      "'$NGINX_VERSION'"/g' ./src/core/nginx.h
@@ -60,7 +62,7 @@ sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h
 sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filter_module.c
 ./configure \
     --prefix=/web/nginx/server \
-    --with-openssl=/build/openssl-3.5.2 \
+    --with-openssl=/build/openssl-3.5.5 \
     --user=web --group=web \
     --with-compat \
     --with-file-aio \
@@ -91,7 +93,7 @@ sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filt
     --with-ld-opt="-static"
 make -j$(nproc)
 make install
-rm -rf /build/*
+rm -rf /build/nginx/*
 EOF
 
 # PHP综合构建
@@ -103,13 +105,11 @@ WORKDIR /build
 RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
-wget https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz
 tar -xzf php-$PHP_LATEST_VERSION.tar.gz
 tar -xzf php-7.4.33.tar.gz
 tar -xzf phpredis-6.1.0.tar.gz
 tar -xzf openssl-1.1.1w.tar.gz
 tar -xzf curl-7.87.0.tar.gz
-tar -xzf openssl-3.5.2.tar.gz
 cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis
 cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
 cd /build/openssl-1.1.1w
@@ -125,8 +125,8 @@ cd /build/curl-7.87.0
 ./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static
 make -j$(nproc)
 make install
-cd /build/openssl-3.5.2
-CONFIGURE_OPTS="--prefix=/web/openssl-3.5.2 --openssldir=/web/openssl-3.5.2 no-shared no-dso no-tests"
+cd /build/openssl-3.5.5
+CONFIGURE_OPTS="--prefix=/web/openssl-3.5.5 --openssldir=/web/openssl-3.5.5 no-shared no-dso no-tests"
 if [ "$TARGETARCH" = "arm64" ]; then
     ./Configure linux-aarch64 $CONFIGURE_OPTS
 else
@@ -146,7 +146,7 @@ for phpversion in 7.4.33 $PHP_LATEST_VERSION; do
     else
         unset CXXFLAGS CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH
         export buildtype=latest
-        export OPENSSL_PREFIX_PATH="/web/openssl-3.5.2"
+        export OPENSSL_PREFIX_PATH="/web/openssl-3.5.5"
         PHPCONFIG="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}"
     fi
     export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib"
@@ -198,5 +198,5 @@ for phpversion in 7.4.33 $PHP_LATEST_VERSION; do
 done
 mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf
 mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
-rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.2 /build/*
+rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.5 /build/*
 EOF
