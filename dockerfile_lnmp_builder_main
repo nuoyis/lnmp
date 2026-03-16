@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-c"]
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y curl jq ca-certificates;\
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # Fetch versions from upstream (with sane fallbacks) and write JSON
 RUN <<EOF
@@ -42,7 +42,8 @@ ARG TARGETVARIANT
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
-    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev
+    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev;\
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # 目录初始化
 RUN export $(cat /tmp/version.env); \
