@@ -24,10 +24,11 @@ jobs:
   lnmp-np-build:
     strategy:
       matrix:
-        arch: [amd64, arm64]
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
-
-    runs-on: ${{ matrix.runner }}
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -46,11 +47,11 @@ jobs:
           cp -r lnmp/config/supervisord.conf.txt build/config/
           cp -r lnmp/config/start.sh.txt build/config/
           cp -r config/* build/config
+          cp -r Dockerfile build/
       
       - name: lnmp docker build
         run: |
-          cd build
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} .
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
 
       - name: lnmp docker push
         run: |
@@ -60,7 +61,7 @@ jobs:
 
   create-manifest:
     runs-on: ubuntu-latest
-    needs: [build-amd64, build-arm64]
+    needs: [lnmp-np-build]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to aliyunHub

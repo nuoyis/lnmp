@@ -45,11 +45,12 @@ jobs:
           cp -r lnmp/config/supervisord.conf.txt build/config/
           cp -r lnmp/config/start.sh.txt build/config/
           cp -r config/* build/config
+          cp -r Dockerfile build/
       
       - name: lnmp docker build
         run: |
           cd build
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} .
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
 
       - name: lnmp docker push
         run: |
