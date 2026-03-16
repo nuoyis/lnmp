@@ -39,8 +39,9 @@ mkdir /docker-entrypoint-initdb.d
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates
-apt install -y supervisor curl libncurses6
-apt clean && rm -rf /var/cache/apt /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
+apt install -y supervisor curl
+apt clean
+rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
 ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
 ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
 EOF
