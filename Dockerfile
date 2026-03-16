@@ -269,7 +269,7 @@ ADD config/stable-php.ini.txt /web/php/stable/etc/php.ini
 ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 
 # 综合最后处理
-RUN >>EOF
+RUN <<EOF
 mkdir -p /web/libs;
 if [ "$BUILD_TYPE" = "lnmp" ]; then
     for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld; do \
