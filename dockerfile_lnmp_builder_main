@@ -26,7 +26,7 @@ echo "nuoyis's lnmp will be tmp"
 sleep 5
 EOF
 
-FROM docker.io/debian:13 AS tmper
+FROM docker.io/debian:13 AS builder
 
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
