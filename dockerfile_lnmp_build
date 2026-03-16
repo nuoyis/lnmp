@@ -4,9 +4,6 @@ FROM docker.io/debian:13-slim AS runner
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
 
-# 复制 so依赖
-COPY --from=builder /runner-libs /lib
-
 # 复制 web文件夹
 COPY --from=builder /web /web
 
@@ -20,6 +17,10 @@ ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
 
 # 必要的初始化
 RUN <<EOF
+if [ -d /web/libs ]; then
+      find /web/libs -type d | sort -u > /etc/ld.so.conf.d/nuoyis-web-libs.conf;
+      ldconfig;
+fi
 useradd -u 2233 -m -s /sbin/nologin web
 mkdir -p /run/{mariadb,php/{stable,latest}}
 chown -R web:web /web
