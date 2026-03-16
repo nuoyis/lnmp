@@ -44,7 +44,7 @@ jobs:
       
       - name: lnmp config
         run: |
-          mkdir -p build/config
+          mkdir -p build/{config,software}
           cp -r lnmp/config/supervisord.conf.txt build/config/
           cp -r lnmp/config/start.sh.txt build/config/
           cp -r software/* build/software
