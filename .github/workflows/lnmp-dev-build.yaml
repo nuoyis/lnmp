@@ -23,8 +23,11 @@ jobs:
   lnmp-build:
     strategy:
       matrix:
-        arch: [amd64, arm64]
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.runner }}
 
@@ -49,7 +52,6 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          cd build
           docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
 
       - name: lnmp docker push

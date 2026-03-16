@@ -20,7 +20,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  jobs:
   lnmp-np-build:
     strategy:
       matrix:
@@ -29,6 +28,8 @@ jobs:
             runner: ubuntu-24.04
           - arch: arm64
             runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +52,8 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
+          cd build
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} .
 
       - name: lnmp docker push
         run: |
