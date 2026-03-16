@@ -47,9 +47,11 @@ jobs:
           cp -r config/* build/config
       
       - name: lnmp docker build
+        run: |
           docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
 
       - name: lnmp docker push
+        run: |
           docker push nuoyis1024/lnmp:dev-${{ matrix.arch }}
           docker tag nuoyis1024/lnmp:dev-${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-${{ matrix.arch }}
           docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev-${{ matrix.arch }}
