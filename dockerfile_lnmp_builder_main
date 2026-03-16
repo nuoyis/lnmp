@@ -22,11 +22,11 @@ echo php_latest: $PHP_LATEST_VERSION
 echo php_stable: 7.4.33
 echo php_redis_version: 6.1.0
 echo mariadb_latest: $MARIADB_LATEST_VERSION
-echo "nuoyis's lnmp will be build"
+echo "nuoyis's lnmp will be tmp"
 sleep 5
 EOF
 
-FROM docker.io/debian:13 AS builder
+FROM docker.io/debian:13 AS tmper
 
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
@@ -42,16 +42,16 @@ ARG TARGETVARIANT
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
-    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev;\
+    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config tmp-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev;\
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # 目录初始化
 RUN export $(cat /tmp/version.env); \
-mkdir -p /build/php-$PHP_LATEST_VERSION/ext/php-redis /build/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
+mkdir -p /tmp/php-$PHP_LATEST_VERSION/ext/php-redis /tmp/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
 
-COPY software/openssl-3.5.5.tar.gz /build/openssl-3.5.5.tar.gz
+COPY software/openssl-3.5.5.tar.gz /tmp/openssl-3.5.5.tar.gz
 # Nginx编译
-WORKDIR /build
+WORKDIR /tmp
 RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
@@ -63,7 +63,7 @@ sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h
 sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filter_module.c
 ./configure \
     --prefix=/web/nginx/server \
-    --with-openssl=/build/openssl-3.5.5 \
+    --with-openssl=/tmp/openssl-3.5.5 \
     --user=web --group=web \
     --with-compat \
     --with-file-aio \
@@ -94,15 +94,15 @@ sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filt
     --with-ld-opt="-static"
 make -j$(nproc)
 make install
-rm -rf /build/nginx/*
+rm -rf /tmp/nginx/*
 EOF
 
 # PHP综合构建
-COPY software/php-7.4.33.tar.gz /build/php-7.4.33.tar.gz
-COPY software/phpredis-6.1.0.tar.gz /build/phpredis-6.1.0.tar.gz
-COPY software/openssl-1.1.1w.tar.gz /build/openssl-1.1.1w.tar.gz
-COPY software/curl-7.87.0.tar.gz /build/curl-7.87.0.tar.gz
-WORKDIR /build
+COPY software/php-7.4.33.tar.gz /tmp/php-7.4.33.tar.gz
+COPY software/phpredis-6.1.0.tar.gz /tmp/phpredis-6.1.0.tar.gz
+COPY software/openssl-1.1.1w.tar.gz /tmp/openssl-1.1.1w.tar.gz
+COPY software/curl-7.87.0.tar.gz /tmp/curl-7.87.0.tar.gz
+WORKDIR /tmp
 RUN <<EOF
 export $(cat /tmp/version.env);
 wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
@@ -113,8 +113,8 @@ tar -xzf openssl-1.1.1w.tar.gz
 tar -xzf curl-7.87.0.tar.gz
 cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis
 cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
-cd /build/openssl-1.1.1w
-CONFIGURE_OPTS="--prefix=/web/openssl-1.1.1 --openssldir=/web/openssl-1.1.1 no-shared no-dso no-tests"
+cd /tmp/openssl-1.1.1w
+CONFIGURE_OPTS="--prefix=/tmp/software/openssl-1.1.1 --openssldir=/tmp/software/openssl-1.1.1 no-shared no-dso no-tests"
 if [ "$TARGETARCH" = "arm64" ]; then
     ./Configure linux-aarch64 $CONFIGURE_OPTS
 else
@@ -122,12 +122,12 @@ else
 fi
 make -j$(nproc)
 make install
-cd /build/curl-7.87.0
-./configure --prefix=/web/curl-openssl --with-ssl=/web/openssl-1.1.1 --disable-shared --enable-static
+cd /tmp/curl-7.87.0
+./configure --prefix=/tmp/curl-openssl --with-ssl=/tmp/software/openssl-1.1.1 --disable-shared --enable-static
 make -j$(nproc)
 make install
-cd /build/openssl-3.5.5
-CONFIGURE_OPTS="--prefix=/web/openssl-3.5.5 --openssldir=/web/openssl-3.5.5 no-shared no-dso no-tests"
+cd /tmp/openssl-3.5.5
+CONFIGURE_OPTS="--prefix=/tmp/software/openssl-3.5.5 --openssldir=/tmp/software/openssl-3.5.5 no-shared no-dso no-tests"
 if [ "$TARGETARCH" = "arm64" ]; then
     ./Configure linux-aarch64 $CONFIGURE_OPTS
 else
@@ -138,23 +138,23 @@ make install
 for phpversion in 7.4.33 $PHP_LATEST_VERSION; do
     if [ "$phpversion" == "7.4.33" ]; then
         export CXXFLAGS="-std=c++17"
-        export buildtype=stable
-        export CURL_PREFIX="/web/curl-openssl"
-        export OPENSSL_PREFIX_PATH="/web/openssl-1.1.1"
+        export tmptype=stable
+        export CURL_PREFIX="/tmp/curl-openssl"
+        export OPENSSL_PREFIX_PATH="/tmp/software/openssl-1.1.1"
         PHPCONFIG="--with-curl=${CURL_PREFIX} --with-openssl=${OPENSSL_PREFIX_PATH} --enable-opcache"
         export CPPFLAGS="-I${OPENSSL_PREFIX_PATH}/include -I${CURL_PREFIX}/include"
         export PKG_CONFIG_PATH="${CURL_PREFIX}/lib/pkgconfig:${OPENSSL_PREFIX_PATH}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
     else
         unset CXXFLAGS CURL_PREFIX OPENSSL_PREFIX_PATH CPPFLAGS LDFLAGS PKG_CONFIG_PATH LD_LIBRARY_PATH
-        export buildtype=latest
-        export OPENSSL_PREFIX_PATH="/web/openssl-3.5.5"
+        export tmptype=latest
+        export OPENSSL_PREFIX_PATH="/tmp/software/openssl-3.5.5"
         PHPCONFIG="--with-curl --with-openssl=${OPENSSL_PREFIX_PATH}"
     fi
     export LDFLAGS="-L${OPENSSL_PREFIX_PATH}/lib -L${CURL_PREFIX}/lib"
     export LD_LIBRARY_PATH="${OPENSSL_PREFIX_PATH}/lib:${CURL_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
-    cd /build/php-$phpversion
-    ./configure --prefix=/web/php/$buildtype/  \
-        --with-config-file-path=/web/php/$buildtype/etc/ \
+    cd /tmp/php-$phpversion
+    ./configure --prefix=/web/php/$tmptype/  \
+        --with-config-file-path=/web/php/$tmptype/etc/ \
         --with-freetype \
         --enable-gd \
         --with-jpeg \
@@ -199,5 +199,5 @@ for phpversion in 7.4.33 $PHP_LATEST_VERSION; do
 done
 mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf
 mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
-rm -rf /web/php/*/include /web/php/*/lib/php/build /web/php/*/php/man /web/curl-openssl /web/openssl-1.1.1 /web/openssl-3.5.5 /build/*
+rm -rf /web/php/*/include /web/php/*/lib/php/tmp /web/php/*/php/man /tmp/curl-openssl /tmp/php/*
 EOF

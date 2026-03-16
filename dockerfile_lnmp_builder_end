@@ -19,4 +19,4 @@ ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 # 综合最后处理
 RUN find "/web" -type f -exec dos2unix {} \; \
     strip --strip-unneeded $(find /web -type f -executable) || true;\
-    rm -rf /build
+    rm -rf /build /tmp/*
