@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'start.sh'
-      - 'dockerfile*'
+      - 'Dockerfile'
       - 'config/**'
       - 'software/**'
       - '.github/workflows/**'
