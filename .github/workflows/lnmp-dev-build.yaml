@@ -48,7 +48,8 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
+          cd build
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} .
 
       - name: lnmp docker push
         run: |
