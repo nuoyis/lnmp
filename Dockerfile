@@ -37,6 +37,8 @@ COPY --from=versions /tmp/version.env /tmp/version.env
 # 架构变量定义
 ARG TARGETARCH
 ARG TARGETVARIANT
+# lnmp和lnmp-np定义
+ARG BUILD_TYPE=lnmp
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -203,3 +205,134 @@ mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf
 mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
 rm -rf /web/php/*/include /web/php/*/lib/php/tmp /web/php/*/php/man /tmp/curl-openssl /tmp/php/*
 EOF
+# mariadb 编译
+WORKDIR /tmp
+RUN <<EOF
+if [ "$BUILD_TYPE" = "lnmp" ]; then
+    export $(cat /tmp/version.env)
+    wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz
+    tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz
+    cd mariadb-$MARIADB_LATEST_VERSION
+    cmake . \
+        -DCMAKE_INSTALL_PREFIX=/web/mariadb \
+        -DMYSQL_DATADIR=/web/mariadb/data \
+        -DSYSCONFDIR=/web/mariadb/config \
+        -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+        -DWITH_ARCHIVE_STORAGE_ENGINE=1 \
+        -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
+        -DWITHOUT_TOKUDB=1 \
+        -DWITHOUT_MROONGA_STORAGE_ENGINE=1 \
+        -DPLUGIN_SPHINX=NO \
+        -DPLUGIN_FEEDBACK=NO \
+        -DWITH_READLINE=1 \
+        -DWITH_SSL=system \
+        -DWITH_ZLIB=system \
+        -DWITH_LIBWRAP=0 \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DWITH_DEBUG=0 \
+        -DWITH_UNIT_TESTS=OFF \
+        -DWITH_BENCHMARK=OFF \
+        -DWITH_WSREP=OFF \
+        -DENABLE_DTRACE=OFF \
+        -DBUILD_TESTING=OFF \
+        -DDEFAULT_CHARSET=utf8mb4 \
+        -DDEFAULT_COLLATION=utf8mb4_general_ci \
+        -DMYSQL_USER=web \
+        -DMYSQL_UNIX_ADDR=/run/mariadb/mariadb.sock
+    make -j$(nproc)
+    make install
+    strip /web/mariadb/bin/* /web/mariadb/lib/*.so* || true
+    rm -rf /web/mariadb/mysql-test /web/mariadb/sql-bench /web/mariadb/man /web/mariadb/include /web/mariadb/docs /tmp/*
+fi
+EOF
+
+# 配置文件添加
+# docker-start-shell
+ADD config/supervisord.conf.txt /web/supervisord/supervisord.conf
+ADD config/start.sh.txt /web/start.sh
+# nginx
+ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
+ADD config/ssl/default.pem /web/nginx/server/conf/ssl/default.pem
+ADD config/ssl/default.key /web/nginx/server/conf/ssl/default.key
+ADD config/start-php-latest.conf.txt /web/nginx/server/conf/start-php-latest.conf
+ADD config/path.conf.txt /web/nginx/server/conf/path.conf
+ADD config/start-php-stable.conf.txt /web/nginx/server/conf/start-php-stable.conf
+ADD config/head.conf.txt /web/nginx/server/conf/head.conf
+ADD config/index.html /web/nginx/server/template/index.html
+ADD config/default.conf.txt /web/nginx/server/template/default.conf.init
+ADD config/nginx.conf.full.template.txt /web/nginx/server/template/nginx.conf.full.template
+ADD config/nginx.conf.succinct.template.txt /web/nginx/server/template/nginx.conf.succinct.template
+# php
+ADD config/latest-php.ini.txt /web/php/latest/etc/php.ini
+ADD config/fpm-latest.conf.txt /web/php/latest/etc/php-fpm.d/fpm.conf
+ADD config/stable-php.ini.txt /web/php/stable/etc/php.ini
+ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
+
+# 综合最后处理
+RUN >>EOF
+mkdir -p /web/libs;
+if [ "$BUILD_TYPE" = "lnmp" ]; then
+    for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld; do \
+        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs; \
+    done
+else
+    for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm; do
+        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs;
+    done
+fi
+find "/web" -type f -exec dos2unix {} \;
+strip --strip-unneeded $(find /web -type f -executable) || true;
+rm -rf /tmp/*
+EOF
+
+# 创建最终镜像
+FROM docker.io/debian:13-slim AS runner
+
+# 设置默认 shell
+SHELL ["/bin/bash", "-c"]
+
+# lnmp和lnmp-np定义
+ARG BUILD_TYPE=lnmp
+
+# 复制 web文件夹
+COPY --from=builder /web /web
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 环境变量
+ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
+
+# 必要的初始化
+RUN <<EOF
+ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+if [ -d /web/libs ]; then
+      find /web/libs -type d | sort -u > /etc/ld.so.conf.d/nuoyis-web-libs.conf;
+      ldconfig;
+fi
+useradd -u 2233 -m -s /sbin/nologin web
+mkdir -p /run/{mariadb,php/{stable,latest}}
+chown -R web:web /web
+chown -R web:web /run
+chmod -R 775 /run
+chmod -R 775 /web
+chmod g+s /web
+chmod +x /web/start.sh
+chmod +x /web/healthcheck.sh
+mkdir /docker-entrypoint-initdb.d
+sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl
+apt clean
+rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
+ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
+ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
+EOF
+
+# 暴露端口
+EXPOSE 80 443
+
+# 设置容器的入口点
+ENTRYPOINT ["/web/start.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/web/supervisord/supervisord.conf"]

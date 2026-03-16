@@ -20,66 +20,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dockerfile_synthesis:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build dockerfile
-        run: |
-          cat dockerfile_lnmp_builder_main > Dockerfile
-          for i in dockerfile_lnmp_builder_so_np dockerfile_lnmp_builder_np_shell dockerfile_lnmp_builder_end dockerfile_lnmp_build;
-            do
-              printf '\n' >> Dockerfile; cat $i >> Dockerfile;
-            done
-      - name: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Dockerfile
-          path: Dockerfile
+  jobs:
+  lnmp-np-build:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
 
-  build-amd64:
-    runs-on: ubuntu-24.04
-    needs: [dockerfile_synthesis]    
+    runs-on: ${{ matrix.runner }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Log in to aliyunHub
         run: docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+      
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: download
-        uses: actions/download-artifact@v4
-        with:
-          name: Dockerfile
-      - name: Build amd64
+      
+      - name: lnmp config
         run: |
-          docker build --no-cache -t nuoyis1024/lnmp-np:dev-amd64 .
-          docker push nuoyis1024/lnmp-np:dev-amd64
-          docker tag nuoyis1024/lnmp-np:dev-amd64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-amd64
-          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-amd64
+          mkdir -p build/config
+          cp -r lnmp/config/supervisord.conf.txt build/config/
+          cp -r lnmp/config/start.sh.txt build/config/
+          cp -r config/* build/config
+      
+      - name: lnmp docker build
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
 
-  build-arm64:
-    runs-on: ubuntu-24.04-arm
-    needs: [dockerfile_synthesis]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Log in to aliyunHub
-        run: docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: download
-        uses: actions/download-artifact@v4
-        with:
-          name: Dockerfile
-      - name: Build arm64
-        run: |
-          docker build --no-cache -t nuoyis1024/lnmp-np:dev-arm64 .
-          docker push nuoyis1024/lnmp-np:dev-arm64
-          docker tag nuoyis1024/lnmp-np:dev-arm64 registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-arm64
-          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-arm64
+      - name: lnmp docker push
+          docker push nuoyis1024/lnmp-np:dev-${{ matrix.arch }}
+          docker tag nuoyis1024/lnmp-np:dev-${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-${{ matrix.arch }}
+          docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev-${{ matrix.arch }}
 
   create-manifest:
     runs-on: ubuntu-latest
