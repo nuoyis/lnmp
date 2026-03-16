@@ -42,11 +42,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: lnmp config
+      - name: lnmp-np config
         run: |
           mkdir -p build/{config,software}
-          cp -r lnmp/config/supervisord.conf.txt build/config/
-          cp -r lnmp/config/start.sh.txt build/config/
+          cp -r lnmp-np/config/* build/config
           cp -r software/* build/software
           cp -r config/* build/config
           cp -r Dockerfile build/
@@ -55,6 +54,12 @@ jobs:
         run: |
           cd build
           docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} .
+
+      - name: Run container
+        run: docker run -d --name lnmp-test -p 8080:80 lnmp-test
+
+      - name: Run CI test
+        run: docker exec lnmp-test /web/ci-test.sh
 
       - name: lnmp docker push
         run: |

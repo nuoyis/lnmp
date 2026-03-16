@@ -250,6 +250,7 @@ EOF
 # docker-start-shell
 ADD config/supervisord.conf.txt /web/supervisord/supervisord.conf
 ADD config/start.sh.txt /web/start.sh
+ADD config/ci-test.sh.txt /web/ci-test.sh
 # nginx
 ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
 ADD config/ssl/default.pem /web/nginx/server/conf/ssl/default.pem
@@ -272,14 +273,13 @@ ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 RUN <<EOF
 mkdir -p /web/libs;
 if [ "$BUILD_TYPE" = "lnmp" ]; then
-    for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld; do \
-        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs; \
-    done
+    binso="/web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld"
 else
-    for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm; do
-        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs;
-    done
+    binso="/web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm"
 fi
+for bin in $binso; do \
+    ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs; \
+done
 find "/web" -type f -exec dos2unix {} \;
 strip --strip-unneeded $(find /web -type f -executable) || true;
 rm -rf /tmp/*
@@ -324,6 +324,9 @@ mkdir /docker-entrypoint-initdb.d
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl
+if [ "$BUILD_TYPE" = "lnmp" ]; then
+    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
+fi
 apt clean
 rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
 ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
