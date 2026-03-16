@@ -1,7 +1,7 @@
 # so环境获取
 RUN mkdir -p /runner-libs; \
     for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld; do \
-        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /runner-libs \
+        ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /runner-libs; \
     done
 
 # 配置文件添加
