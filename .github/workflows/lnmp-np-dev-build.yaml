@@ -27,7 +27,7 @@ jobs:
       - name: Build dockerfile
         run: |
           cat dockerfile_lnmp_builder_main > Dockerfile
-          for i in dockerfile_lnmp_builder_so_np dockerfile_lnmp_builder_np_shell dockerfile_lnmp_builder_end dockerfile_lnmp_build;
+          for i in dockerfile_lnmp_builder_np_shell dockerfile_lnmp_builder_end dockerfile_lnmp_build;
             do
               printf '\n' >> Dockerfile; cat $i >> Dockerfile;
             done
