@@ -47,6 +47,7 @@ jobs:
           mkdir -p build/config
           cp -r lnmp/config/supervisord.conf.txt build/config/
           cp -r lnmp/config/start.sh.txt build/config/
+          cp -r software/* build/software
           cp -r config/* build/config
           cp -r Dockerfile build/
       
