@@ -56,7 +56,7 @@ mkdir -p /tmp/build/php-$PHP_LATEST_VERSION/ext/php-redis /tmp/build/php-7.4.33/
 
 COPY software/openssl-3.5.5.tar.gz /tmp/build/openssl-3.5.5.tar.gz
 # Nginx编译
-WORKDIR /tmp
+WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
@@ -107,7 +107,7 @@ COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
 COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
 COPY software/openssl-1.1.1w.tar.gz /tmp/build/openssl-1.1.1w.tar.gz
 COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
-WORKDIR /tmp
+WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
 wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
@@ -207,7 +207,7 @@ mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
 rm -rf /web/php/*/include /web/php/*/lib/php/tmp /web/php/*/php/man /tmp/build/curl-openssl /tmp/build/php
 EOF
 # mariadb 编译
-WORKDIR /tmp
+WORKDIR /tmp/build
 RUN <<EOF
 if [ "$BUILD_TYPE" = "lnmp" ]; then
     export $(cat /tmp/build/version.env)
