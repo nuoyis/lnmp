@@ -252,6 +252,7 @@ EOF
 ADD config/supervisord.conf.txt /web/supervisord/supervisord.conf
 ADD config/start.sh.txt /web/start.sh
 ADD config/ci-test.sh.txt /web/ci-test.sh
+ADD config/healthcheck.sh.txt /web/healthcheck.sh
 # nginx
 ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
 ADD config/ssl/default.pem /web/nginx/server/conf/ssl/default.pem
