@@ -85,7 +85,7 @@ jobs:
             runner: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.runner }}
-
+    needs: [tag-branch-release]
     steps:
       - uses: actions/checkout@v4
       
@@ -185,7 +185,7 @@ jobs:
 
   create-manifest:
     runs-on: ubuntu-latest
-    needs: [lnmp-np-build,lnmp-build]
+    needs: [tag-branch-release,lnmp-np-build,lnmp-build]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to dockerhub and aliyun dockerhub
