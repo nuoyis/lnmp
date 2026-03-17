@@ -120,7 +120,7 @@ cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis
 cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
 cd /tmp/build/openssl-1.1.1w
 CONFIGURE_OPTS="--prefix=/tmp/build/software/openssl-1.1.1 --openssldir=/tmp/build/software/openssl-1.1.1 no-shared no-dso no-tests"
-if [ "$TARGETARCH" = "arm64" ]; then
+if [ "$TARGETARCH" == "arm64" ]; then
     ./Configure linux-aarch64 $CONFIGURE_OPTS
 else
     ./config $CONFIGURE_OPTS
@@ -133,7 +133,7 @@ make -j$(nproc)
 make install
 cd /tmp/build/openssl-3.5.5
 CONFIGURE_OPTS="--prefix=/tmp/build/software/openssl-3.5.5 --openssldir=/tmp/build/software/openssl-3.5.5 no-shared no-dso no-tests"
-if [ "$TARGETARCH" = "arm64" ]; then
+if [ "$TARGETARCH" == "arm64" ]; then
     ./Configure linux-aarch64 $CONFIGURE_OPTS
 else
     ./config $CONFIGURE_OPTS
@@ -209,7 +209,7 @@ EOF
 # mariadb 编译
 WORKDIR /tmp/build
 RUN <<EOF
-if [ "$BUILD_TYPE" = "lnmp" ]; then
+if [ "$BUILD_TYPE" == "lnmp" ]; then
     export $(cat /tmp/build/version.env)
     wget https://mirrors.aliyun.com/mariadb/mariadb-$MARIADB_LATEST_VERSION/source/mariadb-$MARIADB_LATEST_VERSION.tar.gz
     tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz
@@ -273,7 +273,7 @@ ADD config/fpm-stable.conf.txt /web/php/stable/etc/php-fpm.d/fpm.conf
 # 综合最后处理
 RUN <<EOF
 mkdir -p /web/libs;
-if [ "$BUILD_TYPE" = "lnmp" ]; then
+if [ "$BUILD_TYPE" == "lnmp" ]; then
     binso="/web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm /web/mariadb/bin/mysqld"
 else
     binso="/web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm"
@@ -324,7 +324,7 @@ mkdir /docker-entrypoint-initdb.d
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl procps
-if [ "$BUILD_TYPE" = "lnmp" ]; then
+if [ "$BUILD_TYPE" == "lnmp" ]; then
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
 fi
 apt clean
