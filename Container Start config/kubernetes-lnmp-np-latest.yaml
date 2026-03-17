@@ -1,39 +1,36 @@
-# ===================== Deployment: nuoyis-lnmp =====================
+# ===================== Deployment: nuoyis-lnmp-np =====================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nuoyis-lnmp
+  name: nuoyis-lnmp-np
   namespace: default
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
   selector:
     matchLabels:
-      app: nuoyis-lnmp
+      app: nuoyis-lnmp-np
   template:
     metadata:
       labels:
-        app: nuoyis-lnmp
+        app: nuoyis-lnmp-np
     spec:
       nodeSelector:
-        kubernetes.io/hostname: 你的node节点位置
+        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
-        - name: nuoyis-lnmp
-          image: nuoyis1024/lnmp:dev
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: ""
+        - name: nuoyis-lnmp-np
+          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.25"
           ports:
             - name: http
               containerPort: 80
             - name: https
               containerPort: 443
-            - name: mariadb
-              containerPort: 3306
           volumeMounts:
             - name: nginx-conf
               mountPath: /web/nginx/conf
@@ -43,12 +40,6 @@ spec:
               mountPath: /web/nginx/ssl
             - name: logs
               mountPath: /web/logs
-            - name: mariadb-init
-              mountPath: /docker-entrypoint-initdb.d
-            - name: mariadb-data
-              mountPath: /web/mariadb/data
-            - name: mariadb-config
-              mountPath: /web/config
             - name: shm
               mountPath: /dev/shm
           startupProbe:
@@ -90,15 +81,6 @@ spec:
         - name: logs
           hostPath:
             path: /var/log/web
-        - name: mariadb-init
-          hostPath:
-            path: /nuoyis-server/web/mariadb/init
-        - name: mariadb-data
-          hostPath:
-            path: /nuoyis-server/web/mariadb/server
-        - name: mariadb-config
-          hostPath:
-            path: /nuoyis-server/web/mariadb/config
         - name: shm
           emptyDir:
             medium: Memory
@@ -112,7 +94,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: nuoyis-lnmp
+    app: nuoyis-lnmp-np
   ports:
     - name: http
       port: 80
@@ -129,8 +111,3 @@ spec:
       targetPort: 443
       nodePort: 443
       protocol: UDP
-    - name: mariadb
-      port: 3306
-      targetPort: 3306
-      nodePort: 3306
-      protocol: TCP

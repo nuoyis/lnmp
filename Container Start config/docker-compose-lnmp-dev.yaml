@@ -1,16 +1,16 @@
-version: '3'
 services:
-  nuoyis-lnmp:
-    container_name: nuoyis-lnmp
-    image: nuoyis1024/lnmp-np:dev
+  lnmp:
+    container_name: lnmp
+    image: nuoyis1024/lnmp:dev
     networks: 
-      nuoyis-lnmp-net:
+      lnmp-net:
         aliases:
-          - nuoyis-lnmp
+          - lnmp
     ports:
       - 80:80
       - 443:443
       - 443:443/udp
+      - 3306:3306
     volumes:
       # nginx 配置文件
       - /nuoyis-server/web/nginx/conf:/web/nginx/conf
@@ -20,8 +20,17 @@ services:
       - /nuoyis-server/web/nginx/ssl:/web/nginx/ssl
       # Log 目录
       - /var/log/web:/web/logs
+      # mariadb 数据与配置
+      - /nuoyis-server/web/mariadb/init:/docker-entrypoint-initdb.d
+      # MariaDB 数据目录
+      - /nuoyis-server/web/mariadb/server:/web/mariadb/data
+      # MariaDB 导入目录（自动导入）
+      - /nuoyis-server/web/mariadb/import:/web/mariadb/import
+      # MariaDB 配置
+      - /nuoyis-server/web/mariadb/config:/web/mariadb/config
     environment:
       TIME_ZONE: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: "testTest"
     shm_size: '1g'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -34,7 +43,7 @@ services:
 
 networks:
   nuoyis-net:
-    name: nuoyis-net
+    name: lnmp-net
     driver: bridge
     ipam:
       driver: default

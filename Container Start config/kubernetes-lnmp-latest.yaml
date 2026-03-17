@@ -5,9 +5,7 @@ metadata:
   name: nuoyis-lnmp
   namespace: default
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
   selector:
     matchLabels:
       app: nuoyis-lnmp
@@ -17,13 +15,17 @@ spec:
         app: nuoyis-lnmp
     spec:
       nodeSelector:
-        kubernetes.io/hostname: 你的node节点位置
+        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
         - name: nuoyis-lnmp
           image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:latest
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.25"
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: ""
@@ -32,8 +34,6 @@ spec:
               containerPort: 80
             - name: https
               containerPort: 443
-            - name: mariadb
-              containerPort: 3306
           volumeMounts:
             - name: nginx-conf
               mountPath: /web/nginx/conf
@@ -43,12 +43,6 @@ spec:
               mountPath: /web/nginx/ssl
             - name: logs
               mountPath: /web/logs
-            - name: mariadb-init
-              mountPath: /docker-entrypoint-initdb.d
-            - name: mariadb-data
-              mountPath: /web/mariadb/data
-            - name: mariadb-config
-              mountPath: /web/config
             - name: shm
               mountPath: /dev/shm
           startupProbe:
@@ -90,15 +84,6 @@ spec:
         - name: logs
           hostPath:
             path: /var/log/web
-        - name: mariadb-init
-          hostPath:
-            path: /nuoyis-server/web/mariadb/init
-        - name: mariadb-data
-          hostPath:
-            path: /nuoyis-server/web/mariadb/server
-        - name: mariadb-config
-          hostPath:
-            path: /nuoyis-server/web/mariadb/config
         - name: shm
           emptyDir:
             medium: Memory
@@ -129,8 +114,3 @@ spec:
       targetPort: 443
       nodePort: 443
       protocol: UDP
-    - name: mariadb
-      port: 3306
-      targetPort: 3306
-      nodePort: 3306
-      protocol: TCP

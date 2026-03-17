@@ -1,16 +1,16 @@
 services:
-  nuoyis-lnmp:
-    container_name: nuoyis-lnmp
-    image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest
-    privileged: true
+  lnmp:
+    container_name: lnmp-np
+    image: nuoyis1024/lnmp-np:dev
     networks: 
-      nuoyis-lnmp-net:
+      lnmp-net:
         aliases:
-          - nuoyis-lnmp
+          - lnmp-np
     ports:
       - 80:80
       - 443:443
       - 443:443/udp
+      - 3306:3306
     volumes:
       # nginx 配置文件
       - /nuoyis-server/web/nginx/conf:/web/nginx/conf
@@ -22,6 +22,7 @@ services:
       - /var/log/web:/web/logs
     environment:
       TIME_ZONE: Asia/Shanghai
+    shm_size: '1g'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -32,8 +33,8 @@ services:
     restart: always
 
 networks:
-  nuoyis-lnmp-net:
-    name: nuoyis-lnmp-net
+  nuoyis-net:
+    name: lnmp-net
     driver: bridge
     ipam:
       driver: default

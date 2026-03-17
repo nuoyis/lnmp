@@ -5,9 +5,7 @@ metadata:
   name: nuoyis-lnmp-np
   namespace: default
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
   selector:
     matchLabels:
       app: nuoyis-lnmp-np
@@ -17,13 +15,17 @@ spec:
         app: nuoyis-lnmp-np
     spec:
       nodeSelector:
-        kubernetes.io/hostname: 你的node节点位置
+        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
         - name: nuoyis-lnmp-np
-          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest
+          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:dev
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.25"
           ports:
             - name: http
               containerPort: 80
@@ -87,7 +89,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nuoyis-lnmp-np-svc
+  name: nuoyis-lnmp-svc
   namespace: default
 spec:
   type: NodePort

@@ -1,36 +1,39 @@
-# ===================== Deployment: nuoyis-lnmp-np =====================
+# ===================== Deployment: nuoyis-lnmp =====================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nuoyis-lnmp-np
+  name: nuoyis-lnmp
   namespace: default
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: 2
   selector:
     matchLabels:
-      app: nuoyis-lnmp-np
+      app: nuoyis-lnmp
   template:
     metadata:
       labels:
-        app: nuoyis-lnmp-np
+        app: nuoyis-lnmp
     spec:
       nodeSelector:
-        kubernetes.io/hostname: 你的node节点位置
+        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
-        - name: nuoyis-lnmp-np
-          image: nuoyis1024/lnmp-np:dev
+        - name: nuoyis-lnmp
+          image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.25"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: ""
           ports:
             - name: http
               containerPort: 80
             - name: https
               containerPort: 443
-            - name: mariadb
-              containerPort: 3306
           volumeMounts:
             - name: nginx-conf
               mountPath: /web/nginx/conf
@@ -89,12 +92,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nuoyis-lnmp-np-svc
+  name: nuoyis-lnmp-svc
   namespace: default
 spec:
   type: NodePort
   selector:
-    app: nuoyis-lnmp-np
+    app: nuoyis-lnmp
   ports:
     - name: http
       port: 80
