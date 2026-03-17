@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+echo "===== CI TEST SOFTWORE INSTALL ====="
+apt install -y procps iproute2 net-tools curl wget lsof ca-certificates >/dev/null 2>&1
 
 echo "===== CI TEST START ====="
 
