@@ -55,7 +55,9 @@ jobs:
           docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
 
       - name: Run container
-        run: docker run -d --name lnmp-test -p 8080:80 lnmp-test
+        run: |
+          docker run -d --name lnmp-test -p 8080:80 nuoyis1024/lnmp:dev-${{ matrix.arch }}
+          sleep 10
 
       - name: Run CI test
         run: docker exec lnmp-test /web/ci-test.sh
