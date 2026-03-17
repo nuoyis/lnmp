@@ -323,7 +323,7 @@ chmod +x /web/healthcheck.sh
 mkdir /docker-entrypoint-initdb.d
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
-apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl procps
 if [ "$BUILD_TYPE" = "lnmp" ]; then
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
 fi
