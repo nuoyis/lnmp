@@ -51,6 +51,7 @@ jobs:
         run: |
           docker run -d --name lnmp-test -p 8080:80 nuoyis1024/lnmp:dev-${{ matrix.arch }}
           sleep 10
+          docker logs -f lnmp-test
 
       - name: Run CI test
         run: docker exec lnmp-test /web/ci-test.sh

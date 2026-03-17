@@ -14,12 +14,23 @@ sleep 2
 
 echo "[TEST] nginx start"
 
+# 如果 nginx 没跑，尝试启动
 if ! pgrep nginx >/dev/null; then
-    echo "nginx failed to start"
-    exit 1
+    echo "nginx not running, try start..."
+
+    nginx 2>/tmp/nginx.err || true
+    sleep 2
 fi
 
-echo "nginx ok"
+# 再检测一次
+if pgrep nginx >/dev/null; then
+    echo "nginx ok"
+else
+    echo "nginx failed"
+    echo "==== nginx error ===="
+    cat /tmp/nginx.err || true
+    exit 1
+fi
 
 
 #################################
