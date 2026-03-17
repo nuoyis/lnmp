@@ -45,14 +45,16 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          cd build
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} .
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
 
       - name: Run container
-        run: docker run -d --name lnmp-test -p 8080:80 nuoyis1024/lnmp-np:dev-${{ matrix.arch }}
+        run: |
+          docker run -d --name lnmp-np-test -p 8080:80 nuoyis1024/lnmp-np:dev-${{ matrix.arch }}
+          sleep 10
+          docker logs -f lnmp-np-test
 
       - name: Run CI test
-        run: docker exec lnmp-test /web/ci-test.sh
+        run: docker exec lnmp-np-test /web/ci-test.sh
 
       - name: Log in to dockerhub and aliyun dockerhub
         uses: nick-fields/retry@v2
@@ -101,7 +103,7 @@ jobs:
 
       - name: Run container
         run: |
-          docker run -d --name lnmp-test -p 8080:80 nuoyis1024/lnmp:dev-${{ matrix.arch }}
+          docker run -d --name lnmp-test -p 8081:80 nuoyis1024/lnmp:dev-${{ matrix.arch }}
           sleep 10
           docker logs -f lnmp-test
 
