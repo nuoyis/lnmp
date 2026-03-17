@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 set -e
-echo "===== CI TEST SOFTWORE INSTALL ====="
-apt install -y procps iproute2 net-tools curl wget lsof ca-certificates >/dev/null 2>&1
 
 echo "===== CI TEST START ====="
 
@@ -12,10 +10,6 @@ echo "===== CI TEST START ====="
 echo "[TEST] nginx config"
 
 nginx -t
-
-echo "[TEST] nginx start"
-
-nginx
 
 sleep 2
 
@@ -65,9 +59,7 @@ echo "[TEST] http check"
 
 sleep 3
 
-if command -v curl >/dev/null; then
-    curl -f http://127.0.0.1 || exit 1
-fi
+curl -sf http://127.0.0.1:80/ > /dev/null || exit 1
 
 echo "http ok"
 
