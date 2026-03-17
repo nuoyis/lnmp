@@ -27,7 +27,7 @@ jobs:
 
       - name: Run version.py
         run: |
-          chmod +x version.py
+          chmod +x config/version.py
           config/version.py
 
       - name: Commit updated JSON if changed
