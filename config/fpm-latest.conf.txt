@@ -4,8 +4,8 @@ error_log = /web/logs/php/latest/php-fpm.log
 log_level = warning
 
 [www]
-;user = web
-;group = web
+user = web
+group = web
 
 listen = /run/php-cgi-latest.sock
 listen.owner = web

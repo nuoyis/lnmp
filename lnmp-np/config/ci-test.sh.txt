@@ -37,9 +37,9 @@ fi
 # 2 php-fpm 检查
 #################################
 
-for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm
+for bin in latest stable
 do
-    echo "[TEST] php binary: $bin"
+    echo "[TEST] $bin-php"
 
     if [ ! -x "$bin" ]; then
         echo "php binary missing"
@@ -55,7 +55,7 @@ do
 
     echo "[TEST] php start"
 
-    "$bin" -t
+    "/web/php/${bin}/sbin/php-fpm" -t -y "/web/php/${bin}/etc/php-fpm.d/fpm.conf"
 done
 
 echo "php-fpm ok"

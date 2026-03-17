@@ -54,7 +54,6 @@ do
     fi
 
     echo "[TEST] php start"
-
     "$bin" -t
 done
 
