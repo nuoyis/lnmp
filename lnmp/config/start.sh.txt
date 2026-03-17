@@ -85,7 +85,7 @@ else
 fi
 
 if [ -n "$mariadb_pid" ]; then
-    kill -9 "$mariadb_pid"
+    mariadb-admin --user=root --password="$MYSQL_ROOT_PASSWORD" shutdown
 fi
 
 echo "database service checkd"
