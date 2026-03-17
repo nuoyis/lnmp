@@ -37,9 +37,9 @@ fi
 # 2 php-fpm 检查
 #################################
 
-for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm
+for bin in latest stable
 do
-    echo "[TEST] php binary: $bin"
+    echo "[TEST] $bin-php"
 
     if [ ! -x "$bin" ]; then
         echo "php binary missing"
@@ -54,14 +54,28 @@ do
     fi
 
     echo "[TEST] php start"
-    "$bin" -t
+
+    "/web/php/${bin}/sbin/php-fpm" -t -y "/web/php/${bin}/etc/php-fpm.d/fpm.conf"
 done
 
 echo "php-fpm ok"
 
 
 #################################
-# 3 mariadb 检查
+# 3 http 检查
+#################################
+
+echo "[TEST] http check"
+
+sleep 3
+
+curl -sf http://127.0.0.1:80/ > /dev/null || exit 1
+
+echo "http ok"
+
+
+#################################
+# 4 mariadb 检查
 #################################
 
 MYSQL_BIN=/web/mariadb/bin/mysqld
@@ -85,21 +99,5 @@ echo "[TEST] mariadb version"
 "$MYSQL_BIN" --version
 
 echo "mariadb ok"
-
-
-#################################
-# 4 http 检查
-#################################
-
-echo "[TEST] http check"
-
-sleep 3
-
-if command -v curl >/dev/null; then
-    curl -f http://127.0.0.1 || exit 1
-fi
-
-echo "http ok"
-
 
 echo "===== CI TEST PASS ====="
