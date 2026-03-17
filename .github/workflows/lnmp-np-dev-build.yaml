@@ -10,6 +10,7 @@ on:
       - 'config/**'
       - 'software/**'
       - '.github/workflows/**'
+      - 'lnmp-np/**'
   workflow_dispatch: # 支持手动触发
 
 permissions:
