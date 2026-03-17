@@ -41,14 +41,14 @@ for bin in latest stable
 do
     echo "[TEST] $bin-php"
 
-    if [ ! -x "$bin" ]; then
+    if [ ! -x "/web/php/${bin}/sbin/php-fpm" ]; then
         echo "php binary missing"
         exit 1
     fi
 
     echo "[TEST] ldd check"
 
-    if ldd "$bin" | grep "not found"; then
+    if ldd "/web/php/${bin}/sbin/php-fpm" | grep "not found"; then
         echo "missing so"
         exit 1
     fi
