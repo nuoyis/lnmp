@@ -34,14 +34,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Log in to aliyunHub
-        run: docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-      
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       
       - name: lnmp config
         run: |
@@ -63,6 +55,15 @@ jobs:
       - name: Run CI test
         run: docker exec lnmp-test /web/ci-test.sh
 
+      - name: Log in to dockerhub and aliyun dockerhub
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+
       - name: lnmp docker push
         uses: nick-fields/retry@v2
         with:
@@ -78,16 +79,14 @@ jobs:
     needs: [lnmp-build]
     steps:
       - uses: actions/checkout@v4
-      - name: Login Aliyun Dockerhub
+      - name: Log in to dockerhub and aliyun dockerhub
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
 
       - name: Create & Push Multi-arch Manifest
         uses: nick-fields/retry@v2
