@@ -10,8 +10,9 @@ echo "===== CI TEST START ====="
 echo "[TEST] nginx config"
 
 nginx -t
-
 sleep 2
+
+echo "[TEST] nginx start"
 
 if ! pgrep nginx >/dev/null; then
     echo "nginx failed to start"
@@ -25,9 +26,7 @@ echo "nginx ok"
 # 2 php-fpm 检查
 #################################
 
-for bin in \
-/web/php/latest/sbin/php-fpm \
-/web/php/stable/sbin/php-fpm
+for bin in /web/php/latest/sbin/php-fpm /web/php/stable/sbin/php-fpm
 do
     echo "[TEST] php binary: $bin"
 
