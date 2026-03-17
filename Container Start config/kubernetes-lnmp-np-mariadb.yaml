@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  labels:
+    app: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:latest
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "0.5"
+            memory: "512Mi"
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: ""
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mariadb-data
+          mountPath: /var/lib/mysql
+        - name: mariadb-init
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mariadb-data
+        hostPath:
+          path: /nuoyis-server/web/mariadb/server
+      - name: mariadb-init
+        hostPath:
+          path: /nuoyis-server/web/mariadb/init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-svc
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306
+      nodePort: 3306

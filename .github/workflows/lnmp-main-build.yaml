@@ -1,0 +1,237 @@
+name: lnmp-Auto Tag, Branch and Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'start.sh'
+      - 'Dockerfile'
+      - 'config/**'
+      - 'software/**'
+      - '.github/workflows/**'
+  workflow_dispatch: # 支持手动触发
+  
+permissions:
+  contents: write
+
+jobs:
+  tag-branch-release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+    steps:
+      - name: Checkout repo (fetch all tags & branches)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+      - name: Setup git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Get latest tag
+        id: get_latest
+        run: |
+          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
+          echo "latest_tag=$latest" >> "$GITHUB_OUTPUT"
+      - name: Compute new tag (patch++)
+        id: bump
+        run: |
+          latest="${{ steps.get_latest.outputs.latest_tag }}"
+          ver=${latest#v}
+          IFS='.' read -r maj min patch <<< "$ver"
+          maj=${maj:-0}
+          min=${min:-0}
+          patch=${patch:-0}
+          patch=$((patch + 1))
+          new_tag="$maj.$min.$patch"
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+      - name: Create tag and push
+        run: |
+          new_tag="${{ steps.bump.outputs.new_tag }}"
+          echo "Creating tag: $new_tag"
+          git tag -a "$new_tag" -m "Release $new_tag"
+          git push origin "refs/tags/$new_tag"
+      - name: Create branch with same name (if not exists)
+        run: |
+          new_tag="${{ steps.bump.outputs.new_tag }}"
+          if git ls-remote --heads origin "refs/heads/$new_tag" | grep -q "$new_tag"; then
+            echo "Branch $new_tag already exists on origin, skipping creation."
+          else
+            git fetch origin main:refs/remotes/origin/main
+            git checkout -b "$new_tag" "origin/main"
+            git push origin "refs/heads/$new_tag"
+          fi
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          release_name: Release ${{ steps.bump.outputs.new_tag }}
+          body: "自动发布 ${{ steps.bump.outputs.new_tag }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lnmp-np-build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: lnmp-np config
+        run: |
+          mkdir -p build/{config,software}
+          cp -r lnmp-np/config/* build/config
+          cp -r software/* build/software
+          cp -r config/* build/config
+          cp -r Dockerfile build/
+      
+      - name: lnmp docker build
+        run: |
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:${{ matrix.arch }} build
+
+      - name: Run container
+        run: |
+          docker run -d --name lnmp-np-test -p 8080:80 nuoyis1024/lnmp-np:${{ matrix.arch }}
+          sleep 10
+          docker logs lnmp-np-test
+
+      - name: Run CI test
+        run: docker exec lnmp-np-test /web/ci-test.sh
+
+      - name: Log in to dockerhub and aliyun dockerhub
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+
+      - name: lnmp-np docker push
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker push nuoyis1024/lnmp-np:${{ matrix.arch }}
+            docker tag nuoyis1024/lnmp-np:${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ matrix.arch }}
+            docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ matrix.arch }}
+
+  lnmp-build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+    needs: [lnmp-np-build]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: lnmp config
+        run: |
+          mkdir -p build/{config,software}
+          cp -r lnmp/config/* build/config
+          cp -r software/* build/software
+          cp -r config/* build/config
+          cp -r Dockerfile build/
+      
+      - name: lnmp docker build
+        run: |
+          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:${{ matrix.arch }} build
+
+      - name: Run container
+        run: |
+          docker run -d --name lnmp-test -p 8081:80 nuoyis1024/lnmp:${{ matrix.arch }}
+          sleep 10
+          docker logs lnmp-test
+
+      - name: Run CI test
+        run: docker exec lnmp-test /web/ci-test.sh
+
+      - name: Log in to dockerhub and aliyun dockerhub
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+
+      - name: lnmp docker push
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker push nuoyis1024/lnmp:${{ matrix.arch }}
+            docker tag nuoyis1024/lnmp:${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ matrix.arch }}
+            docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ matrix.arch }}
+
+  create-manifest:
+    runs-on: ubuntu-latest
+    needs: [lnmp-np-build,lnmp-build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to dockerhub and aliyun dockerhub
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
+
+      - name: Create & Push Multi-arch Manifest
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker manifest create nuoyis1024/lnmp-np:${{ needs.tag-branch-release.outputs.new_tag }} \
+              --amend nuoyis1024/lnmp-np:amd64 \
+              --amend nuoyis1024/lnmp-np:arm64
+            docker manifest push nuoyis1024/lnmp-np:${{ needs.tag-branch-release.outputs.new_tag }}
+            docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ needs.tag-branch-release.outputs.new_tag }} \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:amd64 \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:arm64
+            docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ needs.tag-branch-release.outputs.new_tag }}
+            docker manifest create nuoyis1024/lnmp:${{ needs.tag-branch-release.outputs.new_tag }} \
+              --amend nuoyis1024/lnmp:amd64 \
+              --amend nuoyis1024/lnmp:arm64
+            docker manifest push nuoyis1024/lnmp:${{ needs.tag-branch-release.outputs.new_tag }}
+            docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ needs.tag-branch-release.outputs.new_tag }} \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:amd64 \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:arm64
+            docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ needs.tag-branch-release.outputs.new_tag }}
+            docker manifest create nuoyis1024/lnmp-np:latest \
+              --amend nuoyis1024/lnmp-np:amd64 \
+              --amend nuoyis1024/lnmp-np:arm64
+            docker manifest push nuoyis1024/lnmp-np:latest
+            docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:amd64 \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:arm64
+            docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest
+            docker manifest create nuoyis1024/lnmp:latest \
+              --amend nuoyis1024/lnmp:amd64 \
+              --amend nuoyis1024/lnmp:arm64
+            docker manifest push nuoyis1024/lnmp:latest
+            docker manifest create registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:latest \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:amd64 \
+              --amend registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:arm64
+            docker manifest push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:latest

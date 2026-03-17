@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -e
+
+echo "===== CI TEST START ====="
+
+#################################
+# 1 nginx 检查
+#################################
+
+echo "[TEST] nginx config"
+
+nginx -t
+sleep 2
+
+echo "[TEST] nginx start"
+
+# 如果 nginx 没跑，尝试启动
+if ! pgrep nginx >/dev/null; then
+    echo "nginx not running, try start..."
+
+    nginx 2>/tmp/nginx.err || true
+    sleep 2
+fi
+
+# 再检测一次
+if pgrep nginx >/dev/null; then
+    echo "nginx ok"
+else
+    echo "nginx failed"
+    echo "==== nginx error ===="
+    cat /tmp/nginx.err || true
+    exit 1
+fi
+
+
+#################################
+# 2 php-fpm 检查
+#################################
+
+for bin in latest stable
+do
+    echo "[TEST] $bin-php"
+
+    if [ ! -x "/web/php/${bin}/sbin/php-fpm" ]; then
+        echo "php binary missing"
+        exit 1
+    fi
+
+    echo "[TEST] ldd check"
+
+    if ldd "/web/php/${bin}/sbin/php-fpm" | grep "not found"; then
+        echo "missing so"
+        exit 1
+    fi
+
+    echo "[TEST] php start"
+
+    "/web/php/${bin}/sbin/php-fpm" -t -y "/web/php/${bin}/etc/php-fpm.d/fpm.conf"
+done
+
+echo "php-fpm ok"
+
+
+#################################
+# 3 http 检查
+#################################
+
+echo "[TEST] http check"
+
+sleep 3
+
+curl -sf http://127.0.0.1:80/ > /dev/null || exit 1
+
+echo "http ok"
+
+
+#################################
+# 4 mariadb 检查
+#################################
+
+MYSQL_BIN=/web/mariadb/bin/mysqld
+
+echo "[TEST] mariadb binary"
+
+if [ ! -x "$MYSQL_BIN" ]; then
+    echo "mysqld missing"
+    exit 1
+fi
+
+echo "[TEST] mariadb ldd"
+
+if ldd "$MYSQL_BIN" | grep "not found"; then
+    echo "missing mariadb so"
+    exit 1
+fi
+
+echo "[TEST] mariadb version"
+
+"$MYSQL_BIN" --version
+
+echo "mariadb ok"
+
+echo "===== CI TEST PASS ====="
