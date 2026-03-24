@@ -33,7 +33,7 @@ services:
     restart: always
 
 networks:
-  nuoyis-net:
+  lnmp-net:
     name: lnmp-net
     driver: bridge
     ipam:
