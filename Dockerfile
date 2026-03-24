@@ -55,13 +55,30 @@ RUN export $(cat /tmp/build/version.env); \
 mkdir -p /tmp/build/php-$PHP_LATEST_VERSION/ext/php-redis /tmp/build/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
 
 COPY software/openssl-3.5.5.tar.gz /tmp/build/openssl-3.5.5.tar.gz
+COPY software/openssl-1.1.1w.tar.gz /tmp/build/openssl-1.1.1w.tar.gz
+COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
+COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
+COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
+
+RUN <<EOF
+export $(cat /tmp/build/version.env);
+wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
+wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
+tar -xzf openssl-3.5.5.tar.gz
+tar -xzf nginx-$NGINX_VERSION.tar.gz
+tar -xzf php-$PHP_LATEST_VERSION.tar.gz
+tar -xzf php-7.4.33.tar.gz
+tar -xzf phpredis-6.1.0.tar.gz
+tar -xzf openssl-1.1.1w.tar.gz
+tar -xzf curl-7.87.0.tar.gz
+cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis
+cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
+EOF
+
 # Nginx编译
 WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
-wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
-tar -xzf openssl-3.5.5.tar.gz
-tar -xzf nginx-$NGINX_VERSION.tar.gz
 cd nginx-$NGINX_VERSION
 sed -i 's/#define NGINX_VERSION\s\+".*"/#define NGINX_VERSION      "'$NGINX_VERSION'"/g' ./src/core/nginx.h
 sed -i 's/"nginx\/" NGINX_VERSION/"nuoyis server"/g' ./src/core/nginx.h
@@ -99,25 +116,12 @@ sed -i 's/Server: nginx/Server: nuoyis server/g' ./src/http/ngx_http_header_filt
     --with-ld-opt="-static"
 make -j$(nproc)
 make install
-rm -rf /tmp/build/nginx
 EOF
 
 # PHP综合构建
-COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
-COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
-COPY software/openssl-1.1.1w.tar.gz /tmp/build/openssl-1.1.1w.tar.gz
-COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
 WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
-wget https://www.php.net/distributions/php-$PHP_LATEST_VERSION.tar.gz
-tar -xzf php-$PHP_LATEST_VERSION.tar.gz
-tar -xzf php-7.4.33.tar.gz
-tar -xzf phpredis-6.1.0.tar.gz
-tar -xzf openssl-1.1.1w.tar.gz
-tar -xzf curl-7.87.0.tar.gz
-cp -r phpredis-6.1.0/* php-$PHP_LATEST_VERSION/ext/php-redis
-cp -r phpredis-6.1.0/* php-7.4.33/ext/php-redis
 cd /tmp/build/openssl-1.1.1w
 CONFIGURE_OPTS="--prefix=/tmp/build/software/openssl-1.1.1 --openssldir=/tmp/build/software/openssl-1.1.1 no-shared no-dso no-tests"
 if [ "$TARGETARCH" == "arm64" ]; then
@@ -206,6 +210,7 @@ mv /web/php/latest/etc/php-fpm.conf.default /web/php/latest/etc/php-fpm.conf
 mv /web/php/stable/etc/php-fpm.conf.default /web/php/stable/etc/php-fpm.conf
 rm -rf /web/php/*/include /web/php/*/lib/php/tmp /web/php/*/php/man /tmp/build/curl-openssl /tmp/build/php
 EOF
+
 # mariadb 编译
 WORKDIR /tmp/build
 RUN <<EOF
