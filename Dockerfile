@@ -60,6 +60,7 @@ COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
 COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
 COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
 
+WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
 wget https://github.com/nginx/nginx/releases/download/release-$NGINX_VERSION/nginx-$NGINX_VERSION.tar.gz
