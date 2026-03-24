@@ -46,7 +46,7 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
+          docker build --compress --squash --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:dev-${{ matrix.arch }} build
 
       - name: Run container
         run: |
@@ -100,7 +100,7 @@ jobs:
       
       - name: lnmp docker build
         run: |
-          docker build --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
+          docker build --compress --squash --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:dev-${{ matrix.arch }} build
 
       - name: Run container
         run: |

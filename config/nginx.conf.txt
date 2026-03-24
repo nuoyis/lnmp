@@ -38,6 +38,7 @@ http {
     # 默认页面(仅设置首页基础设置)
     server {
         listen 80;
+        listen [::]:80;
         listen 443 ssl;
         listen [::]:443 ssl;
         listen 443 quic reuseport;
