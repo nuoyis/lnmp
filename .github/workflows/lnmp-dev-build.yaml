@@ -28,6 +28,8 @@ jobs:
         build_type: [lnmp-np, lnmp]
         arch: [amd64, arm64]
 
+    runs-on: ubuntu-24.04
+
     steps:
       - uses: actions/checkout@v4
       
@@ -70,6 +72,20 @@ jobs:
             docker push nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }}
             docker tag nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
             docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+
+  create-manifest:
+    runs-on: ubuntu-24.04
+    needs: [lnmp-builds]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to dockerhub and aliyun dockerhub
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
+            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
 
       - name: Create & Push Multi-arch Manifest
         uses: nick-fields/retry@v2

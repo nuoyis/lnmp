@@ -124,7 +124,7 @@ jobs:
             docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ matrix.arch }}
 
   create-manifest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lnmp-np-build,lnmp-build]
     steps:
       - uses: actions/checkout@v4
