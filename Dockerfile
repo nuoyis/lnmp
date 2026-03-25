@@ -220,7 +220,6 @@ if [ "$BUILD_TYPE" == "lnmp" ]; then
     tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz
     cd mariadb-$MARIADB_LATEST_VERSION
     cmake . \
-        -DWITH_STATIC=ON \
         -DCMAKE_INSTALL_PREFIX=/web/mariadb \
         -DMYSQL_DATADIR=/web/mariadb/data \
         -DSYSCONFDIR=/web/mariadb/config \
@@ -231,12 +230,13 @@ if [ "$BUILD_TYPE" == "lnmp" ]; then
         -DWITHOUT_MROONGA_STORAGE_ENGINE=1 \
         -DPLUGIN_SPHINX=NO \
         -DPLUGIN_FEEDBACK=NO \
-        -DWITH_READLINE=1 \
-        -DWITH_SSL=system \
-        -DWITH_ZLIB=system \
+        -DWITH_READLINE=0 \
+        -DWITH_SSL=bundled \
+        -DWITH_ZLIB=bundled \
         -DWITH_LIBWRAP=0 \
         -DCMAKE_BUILD_TYPE=Release \
         -DWITH_DEBUG=0 \
+        -DWITH_ROCKSDB=0 \
         -DWITH_UNIT_TESTS=OFF \
         -DWITH_BENCHMARK=OFF \
         -DWITH_WSREP=OFF \
@@ -328,6 +328,7 @@ apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false up
 apt --no-install-recommends -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl procps
 if [ "$BUILD_TYPE" == "lnmp" ]; then
     mkdir /docker-entrypoint-initdb.d
+    apt --no-install-recommends -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
 fi
 apt clean
 rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
