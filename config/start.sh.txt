@@ -64,7 +64,7 @@ EOF
     /web/mariadb/scripts/mariadb-install-db --datadir=/web/mariadb/data --user=web
     mariadbd-safe --datadir=/web/mariadb/data --user=web &
     mariadb_pid=$!
-    until mariadb --socket=/run/mariadb/mariadb.sock -u root -e "SELECT 1;" &>/dev/null; do
+    until /web/mariadb/bin/mariadb-admin ping -uroot &>/dev/null; do
           echo "Waiting for MariaDB to be ready..."
           sleep 1
     done

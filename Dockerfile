@@ -220,6 +220,7 @@ if [ "$BUILD_TYPE" == "lnmp" ]; then
     tar -xzf mariadb-$MARIADB_LATEST_VERSION.tar.gz
     cd mariadb-$MARIADB_LATEST_VERSION
     cmake . \
+        -DWITH_STATIC=ON \
         -DCMAKE_INSTALL_PREFIX=/web/mariadb \
         -DMYSQL_DATADIR=/web/mariadb/data \
         -DSYSCONFDIR=/web/mariadb/config \
