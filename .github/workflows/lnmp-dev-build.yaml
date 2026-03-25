@@ -25,15 +25,8 @@ jobs:
   lnmp-builds:
     strategy:
       matrix:
-        include:
-          - build_type: lnmp-np
-            port: 8080
-          - build_type: lnmp
-            port: 8081
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
+        build_type: [lnmp-np, lnmp]
+        arch: [amd64, arm64]
 
     runs-on: ${{ matrix.runner }}
 
@@ -54,7 +47,7 @@ jobs:
 
       - name: Run container
         run: |
-          docker run -d --name ${{ matrix.build_type }}-test -p ${{ matrix.port }}:80 nuoyis1024/${{ matrix.build_type }}:${{ matrix.arch }}
+          docker run -d --name ${{ matrix.build_type }}-test -p 8080:80 nuoyis1024/${{ matrix.build_type }}:${{ matrix.arch }}
           sleep 10
           docker logs ${{ matrix.build_type }}-test
 
