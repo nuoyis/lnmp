@@ -28,8 +28,6 @@ jobs:
         build_type: [lnmp-np, lnmp]
         arch: [amd64, arm64]
 
-    runs-on: ${{ matrix.runner }}
-
     steps:
       - uses: actions/checkout@v4
       
