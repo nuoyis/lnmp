@@ -320,6 +320,8 @@ if [ -d /web/libs ]; then
       ldconfig;
 fi
 useradd -u 2233 -m -s /sbin/nologin web
+ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
+ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor
@@ -329,8 +331,6 @@ if [ "$BUILD_TYPE" == "lnmp" ]; then
 fi
 apt clean
 rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
-ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
-ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
 EOF
 
 # 暴露端口
