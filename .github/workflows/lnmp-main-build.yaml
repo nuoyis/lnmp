@@ -108,7 +108,7 @@ jobs:
           docker logs lnmp-np-test
 
       - name: Run CI test
-        run: docker exec lnmp-np-test /web/ci-test.sh
+        run: docker exec lnmp-np-test /web/healthcheck.sh
 
       - name: Log in to dockerhub and aliyun dockerhub
         uses: nick-fields/retry@v2

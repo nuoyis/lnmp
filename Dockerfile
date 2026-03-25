@@ -59,7 +59,6 @@ COPY software/openssl-1.1.1w.tar.gz /tmp/build/openssl-1.1.1w.tar.gz
 COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
 COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
 COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
-
 WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
@@ -257,7 +256,6 @@ EOF
 # docker-start-shell
 ADD config/supervisord.conf.txt /web/supervisord/supervisord.conf
 ADD config/start.sh.txt /web/start.sh
-ADD config/ci-test.sh.txt /web/ci-test.sh
 ADD config/healthcheck.sh.txt /web/healthcheck.sh
 # nginx
 ADD config/nginx.conf.txt /web/nginx/server/conf/nginx.conf
@@ -289,7 +287,12 @@ for bin in $binso; do \
     ldd $bin | grep -oE '/[^ ]+' | sort -u | xargs -r -I{} cp --parents {} /web/libs; \
 done
 find "/web" -type f -exec dos2unix {} \;
-rm -rf /tmp/build
+useradd -u 2233 -m -s /sbin/nologin web;
+chown -R web:web /web;
+chmod -R 775 /web;
+chmod g+s /web;
+chmod +x /web/start.sh;
+chmod +x /web/healthcheck.sh;
 EOF
 
 # 创建最终镜像
@@ -301,9 +304,6 @@ SHELL ["/bin/bash", "-c"]
 # lnmp和lnmp-np定义
 ARG BUILD_TYPE=lnmp
 
-# 复制 web文件夹
-COPY --from=builder /web /web
-
 # 设置时区
 ENV TZ=Asia/Shanghai
 ENV DEBIAN_FRONTEND=noninteractive
@@ -311,27 +311,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 环境变量
 ENV PATH=/web/mariadb/bin:/web/nginx/server/sbin:$PATH
 
+# 复制 web文件夹
+COPY --from=builder /web /web
 # 必要的初始化
 RUN <<EOF
-ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 if [ -d /web/libs ]; then
       find /web/libs -type d | sort -u > /etc/ld.so.conf.d/nuoyis-web-libs.conf;
       ldconfig;
 fi
 useradd -u 2233 -m -s /sbin/nologin web
-mkdir -p /run/{mariadb,php/{stable,latest}}
-chown -R web:web /web
-chown -R web:web /run
-chmod -R 775 /run
-chmod -R 775 /web
-chmod g+s /web
-chmod +x /web/start.sh
-chmod +x /web/healthcheck.sh
-mkdir /docker-entrypoint-initdb.d
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
-apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl procps
+apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor
 if [ "$BUILD_TYPE" == "lnmp" ]; then
+    mkdir /docker-entrypoint-initdb.d
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
 fi
 apt clean

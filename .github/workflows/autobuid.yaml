@@ -45,9 +45,10 @@ jobs:
           docker run -d --name lnmp-np-test -p 8080:80 nuoyis1024/lnmp-np:${{ matrix.arch }}
           sleep 10
           docker logs lnmp-np-test
+          docker images
 
       - name: Run CI test
-        run: docker exec lnmp-np-test /web/ci-test.sh
+        run: docker exec lnmp-np-test /web/healthcheck.sh
 
       - name: Log in to dockerhub and aliyun dockerhub
         uses: nick-fields/retry@v2
