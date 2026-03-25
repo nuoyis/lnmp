@@ -43,7 +43,7 @@ jobs:
       - name: lnmp config
         run: |
           mkdir -p build/{config,software}
-          cp -r ${{ build_type }}/config/* build/config
+          cp -r ${{ matrix.build_type }}/config/* build/config
           cp -r software/* build/software
           cp -r config/* build/config
           cp -r Dockerfile build/
