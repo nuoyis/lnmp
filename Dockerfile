@@ -325,10 +325,9 @@ ln -s /web/php/latest/sbin/php-fpm /usr/bin/php-latest
 ln -s /web/php/stable/sbin/php-fpm /usr/bin/php-stable
 sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources
 apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y
-apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor
+apt --no-install-recommends -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates supervisor curl procps
 if [ "$BUILD_TYPE" == "lnmp" ]; then
     mkdir /docker-entrypoint-initdb.d
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y libncurses6
 fi
 apt clean
 rm -rf /var/cache/apt/* /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info
