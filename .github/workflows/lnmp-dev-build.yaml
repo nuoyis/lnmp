@@ -42,9 +42,9 @@ jobs:
           cp -r config/* build/config
           cp -r Dockerfile build/
       - name: lnmp docker build
-        run: docker build --compress --squash --no-cache --build-arg BUILD_TYPE=${{ matrix.build_type }} -t nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }} build
+        run: docker build --compress --squash --no-cache --build-arg BUILD_TYPE=${{ matrix.build_type }} -t ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }} build
       - name: push GHCR
-        run: docker push ghcr.io/${{ github.repository }}/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+        run: docker push ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
 
   ci-test-and-push:
     strategy:
@@ -56,10 +56,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Pull images
-        run: docker pull ghcr.io/${{ github.repository }}/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+        run: docker pull ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
       - name: Run container
         run: |
-          docker run -d --name ${{ matrix.build_type }}-test -p 8080:80 ghcr.io/${{ github.repository }}/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+          docker run -d --name ${{ matrix.build_type }}-test -p 8080:80 ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
           sleep 60
           docker logs ${{ matrix.build_type }}-test
       - name: Run CI test
@@ -78,8 +78,8 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            docker tag ghcr.io/${{ github.repository }}/${{ matrix.build_type }}:dev-${{ matrix.arch }} nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }}
-            docker tag ghcr.io/${{ github.repository }}/${{ matrix.build_type }}:dev-${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+            docker tag ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }} nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }}
+            docker tag ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
             docker push nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }}
             docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }}
   
