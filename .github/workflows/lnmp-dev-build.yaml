@@ -48,7 +48,7 @@ jobs:
       - name: Run container
         run: |
           docker run -d --name ${{ matrix.build_type }}-test -p 8080:80 nuoyis1024/${{ matrix.build_type }}:dev-${{ matrix.arch }}
-          sleep 10
+          sleep 60
           docker logs ${{ matrix.build_type }}-test
 
       - name: Run CI test
