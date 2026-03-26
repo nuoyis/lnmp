@@ -1,31 +1,29 @@
-# ===================== Deployment: nuoyis-lnmp-np =====================
+# ===================== Deployment: lnmp-np =====================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nuoyis-lnmp-np
-  namespace: default
+  name: lnmp-np
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nuoyis-lnmp-np
+      app: lnmp-np
   template:
     metadata:
       labels:
-        app: nuoyis-lnmp-np
+        app: lnmp-np
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
-        - name: nuoyis-lnmp-np
+        - name: lnmp-np
           image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:latest
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "0.25"
+          imagePullPolicy: IfNotPresent
+          # resources:
+          #   requests:
+          #     memory: "512Mi"
+          #     cpu: "0.25"
           ports:
             - name: http
               containerPort: 80
@@ -48,36 +46,39 @@ spec:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            failureThreshold: 30
-            periodSeconds: 10
+            failureThreshold: 60
+            periodSeconds: 15
+            timeoutSeconds: 30
           livenessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            initialDelaySeconds: 5
-            failureThreshold: 5
-            periodSeconds: 8
+            initialDelaySeconds: 20
+            failureThreshold: 10
+            periodSeconds: 15
+            timeoutSeconds: 30
           readinessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            initialDelaySeconds: 5
-            failureThreshold: 3
-            periodSeconds: 8
+            initialDelaySeconds: 20
+            failureThreshold: 6
+            periodSeconds: 15
+            timeoutSeconds: 30
       volumes:
         - name: nginx-conf
           hostPath:
-            path: /nuoyis-server/web/nginx/conf
+            path: /server/web/nginx/conf
         - name: nginx-webside
           hostPath:
-            path: /nuoyis-server/web/nginx/webside
+            path: /server/web/nginx/webside
         - name: nginx-ssl
           hostPath:
-            path: /nuoyis-server/web/nginx/ssl
+            path: /server/web/nginx/ssl
         - name: logs
           hostPath:
             path: /var/log/web
@@ -89,25 +90,22 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nuoyis-lnmp-svc
-  namespace: default
+  name: lnmp-np-svc
 spec:
-  type: NodePort
+  type: LoadBalancer 
   selector:
-    app: nuoyis-lnmp-np
+    app: lnmp-np
   ports:
     - name: http
       port: 80
       targetPort: 80
-      nodePort: 80
       protocol: TCP
     - name: https-tcp
       port: 443
       targetPort: 443
-      nodePort: 443
       protocol: TCP
     - name: https-udp
       port: 443
       targetPort: 443
-      nodePort: 443
       protocol: UDP
+  ipFamilyPolicy: PreferDualStack
