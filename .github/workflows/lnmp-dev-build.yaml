@@ -1,4 +1,4 @@
-name: lnmp-Build Multi-Arch Image (dev)
+name: lnmp Branch and Release(Develop)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - 'Dockerfile'
       - 'config/**'
       - 'software/**'
-      - '.github/workflows/**'
+      - '.github/workflows/lnmp-dev-build.yaml'
       - 'lnmp-np/**'
       - 'lnmp/**'
   workflow_dispatch: # 支持手动触发

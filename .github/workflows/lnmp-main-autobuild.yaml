@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-    lnmp-builds:
+  lnmp-builds:
     strategy:
       matrix:
         build_type: [lnmp-np, lnmp]
