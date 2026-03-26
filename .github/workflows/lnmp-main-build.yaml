@@ -9,8 +9,9 @@ on:
       - 'Dockerfile'
       - 'config/**'
       - 'software/**'
-      - '.github/workflows/**'
-  workflow_dispatch: # 支持手动触发
+      - '.github/workflows/lnmp-main-build.yaml'
+      - 'lnmp-np/**'
+      - 'lnmp/**'
   
 permissions:
   contents: write
