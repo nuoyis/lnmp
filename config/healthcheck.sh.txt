@@ -1,3 +1,63 @@
-#!/bin/sh
-# 检查 nginx
-curl -sf http://127.0.0.1:80/ > /dev/null || exit 1
+#!/usr/bin/env bash
+set -e
+
+echo "===== HEALTHCHECK START ====="
+#################################
+# 1 nginx 检查
+#################################
+echo "[CHECK] nginx config"
+nginx -t
+sleep 2
+
+echo "[CHECK] nginx"
+# 检查 nginx 是否在运行（看是否有 nginx sbin）
+if ! [ -x "/web/nginx/server/sbin/nginx" ]; then
+    echo "==== nginx error ===="
+    echo "nginx not running"
+    exit 1
+else
+    echo "nginx ok"
+fi
+
+#################################
+# 2 php-fpm 检查
+#################################
+echo "[CHECK] php laetst"
+# 检查 php-fpm latest
+if ! [ -S /var/run/php-cgi-latest.sock ]; then
+    echo "==== php latest error ===="
+    echo "php latest not running"
+    exit 1
+else
+    echo "php latest ok"
+fi
+
+echo "[CHECK] php stable"
+# 检查 php-fpm stable
+if ! [ -S /var/run/php-cgi-stable.sock ]; then
+    echo "==== php stable error ===="
+    echo "php stable not running"
+    exit 1
+else
+    echo "php stable ok"
+fi
+
+#################################
+# 3 mariadb 检查
+#################################
+echo "[CHECK] mariadb"
+# 检查 MariaDB 可选（只在 lnmp 模式）
+# MariaDB 健康检查
+if [ -x "/web/mariadb/bin/mariadb-admin" ]; then
+    if ! /web/mariadb/bin/mariadb-admin ping -uroot -p"${MYSQL_ROOT_PASSWORD}" >/dev/null 2>&1; then
+        echo "==== mariadb error ===="
+        echo "mariadb not running"
+        exit 1
+    else
+        echo "mariadb ok"
+    fi
+else
+    echo "mariadb not found, skipping check"
+fi
+
+exit 0
