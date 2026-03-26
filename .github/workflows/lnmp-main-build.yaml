@@ -14,6 +14,11 @@ on:
   
 permissions:
   contents: write
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tag-branch-release:
@@ -74,96 +79,49 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  lnmp-np-build:
+          
+  lnmp-builds:
     strategy:
       matrix:
-        include:
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
+        build_type: [lnmp-np, lnmp]
+        arch: [amd64, arm64]
 
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-24.04
     needs: [tag-branch-release]
     steps:
       - uses: actions/checkout@v4
-      
-      - name: lnmp-np config
-        run: |
-          mkdir -p build/{config,software}
-          cp -r lnmp-np/config/* build/config
-          cp -r software/* build/software
-          cp -r config/* build/config
-          cp -r Dockerfile build/
-      
-      - name: lnmp docker build
-        run: |
-          docker build --compress --squash --no-cache --build-arg BUILD_TYPE=lnmp-np -t nuoyis1024/lnmp-np:${{ matrix.arch }} build
-
-      - name: Run container
-        run: |
-          docker run -d --name lnmp-np-test -p 8080:80 nuoyis1024/lnmp-np:${{ matrix.arch }}
-          sleep 10
-          docker logs lnmp-np-test
-
-      - name: Run CI test
-        run: docker exec lnmp-np-test /web/healthcheck.sh
-
-      - name: Log in to dockerhub and aliyun dockerhub
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: |
-            docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
-            docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-
-      - name: lnmp-np docker push
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: |
-            docker push nuoyis1024/lnmp-np:${{ matrix.arch }}
-            docker tag nuoyis1024/lnmp-np:${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ matrix.arch }}
-            docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp-np:${{ matrix.arch }}
-
-  lnmp-build:
-    strategy:
-      matrix:
-        include:
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-
-    runs-on: ${{ matrix.runner }}
-    needs: [lnmp-np-build]
-    steps:
-      - uses: actions/checkout@v4
-      
+      - name: Login GHCR
+        run: docker login ghcr.io -u ${{ github.actor }} --password=${{ secrets.GITHUB_TOKEN }}
       - name: lnmp config
         run: |
           mkdir -p build/{config,software}
-          cp -r lnmp/config/* build/config
+          cp -r ${{ matrix.build_type }}/config/* build/config
           cp -r software/* build/software
           cp -r config/* build/config
           cp -r Dockerfile build/
-      
       - name: lnmp docker build
-        run: |
-          docker build --compress --squash --no-cache --build-arg BUILD_TYPE=lnmp -t nuoyis1024/lnmp:${{ matrix.arch }} build
+        run: docker build --compress --squash --no-cache --build-arg BUILD_TYPE=${{ matrix.build_type }} -t ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }} build
+      - name: push GHCR
+        run: docker push ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }}
 
+  ci-test-and-push:
+    strategy:
+      matrix:
+        build_type: [lnmp-np, lnmp]
+        arch: [amd64, arm64]
+    runs-on: ubuntu-24.04
+    needs: [lnmp-builds]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull images
+        run: docker pull ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }}
       - name: Run container
         run: |
-          docker run -d --name lnmp-test -p 8081:80 nuoyis1024/lnmp:${{ matrix.arch }}
-          sleep 10
-          docker logs lnmp-test
-
+          docker run -d --name ${{ matrix.build_type }}-test -p 8080:80 ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }}
+          sleep 60
+          docker logs ${{ matrix.build_type }}-test
       - name: Run CI test
-        run: docker exec lnmp-test /web/healthcheck.sh
-
+        run: docker exec ${{ matrix.build_type }}-test /web/healthcheck.sh
       - name: Log in to dockerhub and aliyun dockerhub
         uses: nick-fields/retry@v2
         with:
@@ -172,20 +130,20 @@ jobs:
           command: |
             docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
             docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-
       - name: lnmp docker push
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            docker push nuoyis1024/lnmp:${{ matrix.arch }}
-            docker tag nuoyis1024/lnmp:${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ matrix.arch }}
-            docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:${{ matrix.arch }}
-
+            docker tag ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }} nuoyis1024/${{ matrix.build_type }}:${{ matrix.arch }}
+            docker tag ghcr.io/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }} registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }}
+            docker push nuoyis1024/${{ matrix.build_type }}:${{ matrix.arch }}
+            docker push registry.cn-hangzhou.aliyuncs.com/nuoyis/${{ matrix.build_type }}:${{ matrix.arch }}
+  
   create-manifest:
-    runs-on: ubuntu-latest
-    needs: [tag-branch-release,lnmp-np-build,lnmp-build]
+    runs-on: ubuntu-24.04
+    needs: [lnmp-builds,ci-test-and-push,tag-branch-release]
     steps:
       - uses: actions/checkout@v4
       - name: Log in to dockerhub and aliyun dockerhub
@@ -196,7 +154,6 @@ jobs:
           command: |
             docker login --username=${{ secrets.DOCKERHUB_USERNAME }} --password=${{ secrets.DOCKERHUB_TOKEN }}
             docker login --username=${{ secrets.ALIYUN_DOCKER_USERNAME }} --password=${{ secrets.ALIYUN_DOCKER_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
-
       - name: Create & Push Multi-arch Manifest
         uses: nick-fields/retry@v2
         with:
