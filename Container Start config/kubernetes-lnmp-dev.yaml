@@ -1,39 +1,38 @@
-# ===================== Deployment: nuoyis-lnmp =====================
+# ===================== Deployment: lnmp =====================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nuoyis-lnmp
-  namespace: default
+  name: lnmp
 spec:
-  replicas: 2
+  strategy:
+    type: Recreate
+  replicas: 1
   selector:
     matchLabels:
-      app: nuoyis-lnmp
+      app: lnmp
   template:
     metadata:
       labels:
-        app: nuoyis-lnmp
+        app: lnmp
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: nuoyis
       securityContext:
         runAsUser: 0
         runAsGroup: 0
       containers:
-        - name: nuoyis-lnmp
+        - name: lnmp
           image: registry.cn-hangzhou.aliyuncs.com/nuoyis/lnmp:dev
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "0.25"
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: ""
+          imagePullPolicy: IfNotPresent
+          # resources:
+          #   requests:
+          #     memory: "512Mi"
+          #     cpu: "0.25"
           ports:
             - name: http
               containerPort: 80
             - name: https
               containerPort: 443
+            - name: mariadb
+              containerPort: 3306
           volumeMounts:
             - name: nginx-conf
               mountPath: /web/nginx/conf
@@ -41,6 +40,14 @@ spec:
               mountPath: /web/nginx/webside
             - name: nginx-ssl
               mountPath: /web/nginx/ssl
+            - name: mariadb-config
+              mountPath: /web/mariadb/config
+            - name: mariadb-data
+              mountPath: /web/mariadb/data
+            - name: mariadb-import
+              mountPath: /web/mariadb/import
+            - name: mariadb-init
+              mountPath: /docker-entrypoint-initdb.d
             - name: logs
               mountPath: /web/logs
             - name: shm
@@ -51,39 +58,54 @@ spec:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            failureThreshold: 30
-            periodSeconds: 10
+            failureThreshold: 60
+            periodSeconds: 15
+            timeoutSeconds: 30
           livenessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            initialDelaySeconds: 5
-            failureThreshold: 5
-            periodSeconds: 8
+            initialDelaySeconds: 20
+            failureThreshold: 10
+            periodSeconds: 15
+            timeoutSeconds: 30
           readinessProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - /web/healthcheck.sh
-            initialDelaySeconds: 5
-            failureThreshold: 3
-            periodSeconds: 8
+            initialDelaySeconds: 20
+            failureThreshold: 6
+            periodSeconds: 15
+            timeoutSeconds: 30
       volumes:
         - name: nginx-conf
           hostPath:
-            path: /nuoyis-server/web/nginx/conf
+            path: /server/web/nginx/conf
         - name: nginx-webside
           hostPath:
-            path: /nuoyis-server/web/nginx/webside
+            path: /server/web/nginx/webside
         - name: nginx-ssl
           hostPath:
-            path: /nuoyis-server/web/nginx/ssl
+            path: /server/web/nginx/ssl
         - name: logs
           hostPath:
             path: /var/log/web
+        - name: mariadb-config
+          hostPath:
+            path: /nuoyis-server/web/mariadb/config
+        - name: mariadb-data
+          hostPath:
+            path: /nuoyis-server/web/mariadb/server
+        - name: mariadb-import
+          hostPath:
+            path: /nuoyis-server/web/mariadb/import
+        - name: mariadb-init
+          hostPath:
+            path: /nuoyis-server/web/mariadb/init
         - name: shm
           emptyDir:
             medium: Memory
@@ -92,25 +114,26 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nuoyis-lnmp-svc
-  namespace: default
+  name: lnmp-svc
 spec:
-  type: NodePort
+  type: LoadBalancer 
   selector:
-    app: nuoyis-lnmp
+    app: lnmp
   ports:
     - name: http
       port: 80
       targetPort: 80
-      nodePort: 80
       protocol: TCP
     - name: https-tcp
       port: 443
       targetPort: 443
-      nodePort: 443
       protocol: TCP
     - name: https-udp
       port: 443
       targetPort: 443
-      nodePort: 443
       protocol: UDP
+    - name: mariadb
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  ipFamilyPolicy: PreferDualStack
