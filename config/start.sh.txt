@@ -4,15 +4,25 @@
 
 echo "Welcome use nuoyis's lnmp service"
 
+#################################
+# 文件创建集合
+#################################
 mkdir -p /web/nginx/webside/default/
 mkdir -p /web/logs/{nginx,php/{latest,stable},mariadb}
-chown -R web:web /web
+mkdir -p /run/{mariadb,php/{stable,latest}}
 chown -R web:web /run
 chmod -R 775 /run
-chmod -R 775 /web
-chmod g+s /web
-# nginx/php 文件/服务检查
-# 默认HTML
+touch /web/logs/nginx/error.log
+touch /web/logs/php/latest/www-error.log
+touch /web/logs/php/stable/www-error.log
+if [ -x "/web/mariadb/bin/mariadb-admin" ]; then
+  touch /web/logs/mariadb/mariadb-error.log
+  touch /web/logs/mariadb/slow.log
+fi
+#################################
+# nginx/php 服务综合检查
+#################################
+# 默认HTML检查
 echo "check nginx service"
 if [ ! -f "/web/nginx/conf/default.conf.init" ]; then
   echo "default page is not found. then create new default page of html"
@@ -23,22 +33,18 @@ else
 fi
 cp /web/nginx/server/template/nginx.conf.full.template /web/nginx/conf/nginx.conf.full.template
 cp /web/nginx/server/template/nginx.conf.succinct.template /web/nginx/conf/nginx.conf.succinct.template
-touch /web/logs/nginx/error.log
-touch /web/logs/php/latest/www-error.log
-touch /web/logs/php/stable/www-error.log
 echo "nginx service checkd"
 
+#################################
+# mariadb 服务综合检查
+#################################
 if [ -x "/web/mariadb/bin/mariadb-admin" ]; then
-  # mariadb 类启动检查
   echo "check database service"
   MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')}"
   LOCK_DIR=/docker-entrypoint-initdb.d/lockfiles
   INIT_LOCK=$LOCK_DIR/.init.lock
   IMPORT_LOCK=$LOCK_DIR/.import.lock
   DEFAULTCNF=/web/mariadb/config/my.cnf
-  touch /web/logs/mariadb/mariadb-error.log
-  touch /web/logs/mariadb/slow.log
-
   if [ ! -f "$DEFAULTCNF" ]; then
       cat > $DEFAULTCNF << EOF
 [mysqld]
