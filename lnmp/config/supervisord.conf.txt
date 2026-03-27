@@ -9,9 +9,6 @@ childlogdir=/var/log/supervisor
 [unix_http_server]
 file=/run/supervisor.sock
 chmod=0700
-chown=root:root
-username=admin
-password=nuoyislnmp
 
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
@@ -20,7 +17,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 serverurl=unix://run/supervisor.sock
 
 [program:nginx]
-user=web
+user=root
 command=nginx -g 'daemon off;'
 autostart=true
 autorestart=true
@@ -57,6 +54,6 @@ autorestart=true
 stdout_logfile=/web/logs/mariadb-stdout.log
 stdout_logfile_maxbytes=10MB
 stdout_logfile_backups=3
-stderr_logfile=/web/logs/mariadb-stderr.log
+stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=10MB
 stderr_logfile_backups=3

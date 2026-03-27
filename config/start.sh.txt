@@ -33,6 +33,7 @@ else
 fi
 cp /web/nginx/server/template/nginx.conf.full.template /web/nginx/conf/nginx.conf.full.template
 cp /web/nginx/server/template/nginx.conf.succinct.template /web/nginx/conf/nginx.conf.succinct.template
+setcap 'cap_net_bind_service=+ep' /web/nginx/server/sbin/nginx
 echo "nginx service checkd"
 
 #################################
