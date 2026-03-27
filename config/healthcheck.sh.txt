@@ -60,4 +60,16 @@ else
     echo "mariadb not found, skipping check"
 fi
 
+#################################
+# 4 访问 检查
+#################################
+echo "[CHECK] visit webside"
+if ! curl -sf http://127.0.0.1:80/ > /dev/null; then
+    echo "==== visit webside error ===="
+    echo "nginx did not start properly (possibly a permission error)"
+    exit 1
+else
+    echo "visit webside ok"
+fi
+
 exit 0
