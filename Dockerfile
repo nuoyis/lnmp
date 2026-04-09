@@ -1,32 +1,3 @@
-FROM docker.io/debian:13 AS versions
-
-SHELL ["/bin/bash", "-c"]
-
-RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
-    apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y curl jq ca-certificates;\
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
-# Fetch versions from upstream (with sane fallbacks) and write JSON
-RUN <<EOF
-mkdir -p /tmp/build
-NGINX_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.nginx')
-PHP_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.php')
-MARIADB_LATEST_VERSION=$(curl -sLk "https://lnmp.nuoyis.net/versions.json" | jq -r '.versions.mariadb')
-NGINX_VERSION=${NGINX_VERSION:-"1.29.1"}
-PHP_LATEST_VERSION=${PHP_LATEST_VERSION:-"8.5.3"}
-echo "ENV NGINX_VERSION=$NGINX_VERSION" >> /tmp/build/version.env
-echo "ENV PHP_LATEST_VERSION=$PHP_LATEST_VERSION" >> /tmp/build/version.env
-echo "ENV MARIADB_LATEST_VERSION=$MARIADB_LATEST_VERSION" >> /tmp/build/version.env
-echo nginx: $NGINX_VERSION
-echo php_latest: $PHP_LATEST_VERSION
-echo php_stable: 7.4.33
-echo php_redis_version: 6.1.0
-echo mariadb_latest: $MARIADB_LATEST_VERSION
-echo "nuoyis's lnmp will be build"
-sleep 5
-EOF
-
 FROM docker.io/debian:13 AS builder
 
 # 设置默认 shell
@@ -40,25 +11,45 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 # lnmp和lnmp-np定义
 ARG BUILD_TYPE=lnmp
-
+# debian源配置禁止弹窗
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 更换软件源，并安装基础依赖
 RUN sed -i 's/http:\/\/deb.debian.org/https:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false update -y;\
     apt -o Acquire::https::Verify-Peer=false -o Acquire::https::Verify-Host=false install -y ca-certificates;\
-    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-dev;\
+    apt install -y dos2unix vim jq wget autoconf bison re2c make procps gcc cmake g++ bison libicu-dev inetutils-ping pkg-config build-essential libpcre2-dev libncurses5-dev gnutls-dev zlib1g-dev libxslt1-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev libsqlite3-dev libbz2-dev libcurl4-openssl-dev libxpm-dev libzip-dev libonig-dev libgd-dev libaio-dev libgeoip-devcurl jq;\
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # 目录初始化
 RUN export $(cat /tmp/build/version.env); \
 mkdir -p /tmp/build/php-$PHP_LATEST_VERSION/ext/php-redis /tmp/build/php-7.4.33/ext/php-redis /web/{logs/{mariadb,nginx,php/{latest,stable}},nginx/{conf,webside/default,server/$NGINX_VERSION/conf/ssl}} /var/run/php/{stable,latest} /web/{supervisord,mariadb/{bin,data,config,logs}}
 
+COPY versions.json /web/versions.json
 COPY software/openssl-3.5.5.tar.gz /tmp/build/openssl-3.5.5.tar.gz
 COPY software/openssl-1.1.1w.tar.gz /tmp/build/openssl-1.1.1w.tar.gz
 COPY software/phpredis-6.1.0.tar.gz /tmp/build/phpredis-6.1.0.tar.gz
 COPY software/curl-7.87.0.tar.gz /tmp/build/curl-7.87.0.tar.gz
 COPY software/php-7.4.33.tar.gz /tmp/build/php-7.4.33.tar.gz
+
+# 版本号获取
+WORKDIR /tmp/build
+RUN <<EOF
+NGINX_VERSION=$(jq -r '.versions.nginx' /web/versions.json)
+PHP_LATEST_VERSION=$(jq -r '.versions.php' /web/versions.json)
+MARIADB_LATEST_VERSION=$(jq -r '.versions.mariadb' /web/versions.json)
+echo "ENV NGINX_VERSION=$NGINX_VERSION" >> /tmp/build/version.env
+echo "ENV PHP_LATEST_VERSION=$PHP_LATEST_VERSION" >> /tmp/build/version.env
+echo "ENV MARIADB_LATEST_VERSION=$MARIADB_LATEST_VERSION" >> /tmp/build/version.env
+echo nginx: $NGINX_VERSION
+echo php_latest: $PHP_LATEST_VERSION
+echo php_stable: 7.4.33
+echo php_redis_version: 6.1.0
+echo mariadb_latest: $MARIADB_LATEST_VERSION
+echo "nuoyis's lnmp will be build"
+sleep 5
+EOF
+
 WORKDIR /tmp/build
 RUN <<EOF
 export $(cat /tmp/build/version.env);
