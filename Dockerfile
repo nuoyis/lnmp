@@ -3,9 +3,6 @@ FROM docker.io/debian:13 AS builder
 # 设置默认 shell
 SHELL ["/bin/bash", "-c"]
 
-# lnmp 最新版本信息
-COPY --from=versions /tmp/build/version.env /tmp/build/version.env
-
 # 架构变量定义
 ARG TARGETARCH
 ARG TARGETVARIANT
