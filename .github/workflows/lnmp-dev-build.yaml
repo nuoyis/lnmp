@@ -42,6 +42,7 @@ jobs:
           cp -r software/* build/software
           cp -r config/* build/config
           cp -r Dockerfile build/
+          cp -r versions.json build/
       - name: lnmp docker build
         run: docker build --compress --squash --no-cache --build-arg BUILD_TYPE=${{ matrix.build_type }} -t ghcr.io/nuoyis/${{ matrix.build_type }}:dev-${{ matrix.arch }} build
       - name: push GHCR
