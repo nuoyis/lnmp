@@ -3,6 +3,6 @@
         "nginx": "1.31.1",
         "php": "8.4.22",
         "mariadb": "13.0.1",
-        "kubernetes": "1.36.1"
+        "kubernetes": "1.36.2"
     }
 }
