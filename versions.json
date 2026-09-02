@@ -1,6 +1,6 @@
 {
     "versions": {
-        "nginx": "1.31.4",
+        "nginx": "1.31.5",
         "php": "8.5.10",
         "mariadb": "12.3.3",
         "kubernetes": "1.37.0"
